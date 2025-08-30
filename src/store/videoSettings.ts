@@ -3,7 +3,7 @@ import { BaseStore } from './base';
 export const DEFAULT_SETTINGS: VideoSettingValues = Object.freeze({
   autoNext: true,
   autoNextThreshold: 0.95,
-  playbackRate: 1.0,
+  playbackRate: 1.75,
 });
 
 export class VideoSettingStore extends BaseStore<VideoSettingValues> {

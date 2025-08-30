@@ -1,4 +1,11 @@
-import { createStyle, waitForElement } from '../dom';
+import { MK_CUSTOM_COMPONENT } from '@/constants';
+import {
+  createStyle,
+  createSvgFromString,
+  onClickOutside,
+  waitForElement,
+} from '../dom';
+import { SVG_MENU } from '@/assets/svg';
 
 export const removeFooter = () => {
   waitForElement('[data-category=tronclass-footer]')
@@ -16,29 +23,104 @@ export const removeFooter = () => {
 export const fixSomeStyle = () => {
   waitForElement('.layout-row.default-layout')
     .then((layout) => {
-      const box = document.createElement('div');
-      box.append(
+      const customLayout = document.createElement('div');
+      const customDropMenu = document.createElement('div');
+
+      customLayout.append(
         ...document.querySelectorAll(
           '.layout-row.default-layout>li,.layout-row.default-layout>ul'
         )
       );
-      box.classList.add('custom-layout');
-      layout.appendChild(box);
+      customDropMenu.append(createSvgFromString(SVG_MENU));
+
+      customLayout.classList.add('custom-layout', MK_CUSTOM_COMPONENT);
+      customDropMenu.classList.add('custom-drop-menu', MK_CUSTOM_COMPONENT);
+
+      layout.appendChild(customLayout);
+      layout.appendChild(customDropMenu);
+
+      onClickOutside(layout, () => {
+        customLayout.classList.remove('mk-open-menu');
+      });
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 920) {
+          customLayout.classList.remove('mk-open-menu');
+        }
+      });
+      customDropMenu.addEventListener('click', () => {
+        customLayout.classList.toggle('mk-open-menu');
+      });
 
       createStyle(`$css
-        @media (max-width: 920px) {
-          .header .autocollapse-item,
-          .header .menu>.header-item:not(.profile) {
-            display: none;
-          }
+        .mk-component.custom-drop-menu {
+          display: none;
         }
 
-        .custom-layout {
+        .mk-component.custom-layout {
           width: 100%;
         }
 
         .layout-row.default-layout {
           display: flex;
+          justify-content: space-between;
+        }
+
+        @media (max-width: 920px) {
+          .header li, .header ul {
+            display: none !important;
+          }
+
+          .mk-component.custom-drop-menu {
+            display: flex !important;
+            align-items: center;
+            margin-left: 1rem;
+            margin-right: -1rem;
+          }
+
+          .mk-component.custom-drop-menu > svg {
+            cursor: pointer;
+            border-radius: 1rem;
+            padding: 8px;
+            width: 2.5rem;
+            transition: all 0.2s ease-in-out;
+          }
+
+          .mk-component.custom-drop-menu > svg:hover {
+            fill: #ffffffb5 !important;
+            background: #00000026 !important;
+          }
+
+          .mk-component.custom-layout.mk-open-menu {
+            position: absolute;
+            top: 50px;
+            display: flex;
+            flex-direction: column;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            background-color: #313e5c;
+          }
+
+          .mk-component.custom-layout.mk-open-menu li {
+            display: inline-block !important;
+          }
+
+          .mk-component.custom-layout.mk-open-menu .header-vertical-split-line.header-item {
+            border: unset;
+            display: block !important;
+          }
+
+          .mk-component.custom-layout.mk-open-menu ul {
+            height: auto;
+            position: unset;
+            display: block !important;
+          }
+
+          .mk-component.custom-layout.mk-open-menu ul li {
+            height: auto;
+            margin-left: 2.5rem;
+            line-height: initial !important;
+          }
         }
       `);
     })
