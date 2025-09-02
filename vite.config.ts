@@ -26,9 +26,8 @@ export default defineConfig({
       transform(code: string, id: string) {
         if (!id.endsWith('.ts') && !id.endsWith('.tsx')) return null;
 
-        const templateRegex = /`(?:\$?(html|css))?((?:\\`|[^`])*)`/g;
         const newCode = code.replace(
-          templateRegex,
+          /`(?:\$?(html|css))?((?:\\`|[^`])*)`/g,
           (match, prefix, content) => {
             try {
               let minified = content;
