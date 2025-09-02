@@ -1,5 +1,5 @@
 import { blockEventsSetup } from './utils/events';
-import { tryPlayVideo } from '#/course/video';
+import { tryPlayVideo, withVideoDownload } from '#/course/video';
 import {
   enableUserSelectStyle,
   fixSomeStyle,
@@ -12,16 +12,19 @@ const PATH_MATCH =
 const { pathname } = location;
 const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
+// // /user/courses
+// if (/^\/user\/courses\/?$/.test(pathname)) {
+// }
+// /course/xxx/learning-activity/full-screen
+if (viewing && learningID) {
+  tryPlayVideo();
+  withVideoDownload();
+}
+
 // TODO add from settings
 fixSomeStyle();
 removeFooter();
 blockEventsSetup();
 enableUserSelectStyle();
 
-// // /user/courses
-// if (/^\/user\/courses\/?$/.test(pathname)) {
-// }
-// /course/xxx/learning-activity/full-screen
-if (learningID && viewing) {
-  tryPlayVideo();
-}
+// window.addEventListener('hashchange', () => main());

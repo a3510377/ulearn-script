@@ -1,11 +1,11 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
+import { SVG_MENU } from '@/assets/svg';
 import {
   createStyle,
   createSvgFromString,
   onClickOutside,
   waitForElement,
 } from '../dom';
-import { SVG_MENU } from '@/assets/svg';
 
 export const removeFooter = () => {
   waitForElement('[data-category=tronclass-footer]')
@@ -66,8 +66,27 @@ export const fixSomeStyle = () => {
         }
 
         @media (max-width: 920px) {
-          .header li, .header ul {
+          .header .mk-component.custom-layout:not(.mk-open-menu) ul,
+          .header .mk-component.custom-layout:not(.mk-open-menu) li {
             display: none !important;
+          }
+
+          .header .profile-item {
+            gap: 8px;
+          }
+
+          .header .profile .dropdown-list, .header .profile .dropdown-list .dropdown-item {
+            left: unset !important;
+            right: unset !important;
+          }
+
+          .header .profile .dropdown-list .autocollapse-container ul {
+            left: 182px !important;
+            right: unset !important;
+          }
+
+          .header .profile-item .current-user-name {
+            height: auto !important;
           }
 
           .mk-component.custom-drop-menu {
@@ -107,16 +126,16 @@ export const fixSomeStyle = () => {
 
           .mk-component.custom-layout.mk-open-menu .header-vertical-split-line.header-item {
             border: unset;
+            height: 0 !important;
             display: block !important;
           }
 
-          .mk-component.custom-layout.mk-open-menu ul {
+          .mk-component.custom-layout.mk-open-menu > ul {
             height: auto;
             position: unset;
-            display: block !important;
           }
 
-          .mk-component.custom-layout.mk-open-menu ul li {
+          .mk-component.custom-layout.mk-open-menu > ul > li {
             height: auto;
             margin-left: 2.5rem;
             line-height: initial !important;
@@ -124,7 +143,9 @@ export const fixSomeStyle = () => {
         }
       `);
     })
-    .catch();
+    .catch(() => {
+      console.log('Failed to fix some styles');
+    });
 
   // /user/courses
   createStyle(`$css
@@ -224,10 +245,8 @@ export const fixSomeStyle = () => {
 
 export const enableUserSelectStyle = () =>
   createStyle(`$css
-    * {
+    /* --- ${MK_CUSTOM_COMPONENT} ~ mk-component --- */
+    *:not(.mk-component) {
       user-select: text !important;
-      -ms-user-select: text !important;
-      -moz-user-select: text !important;
-      -webkit-user-select: text !important;
     }
   `);

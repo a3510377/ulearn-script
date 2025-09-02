@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
-import * as csso from 'csso';
+import * as lightningcss from 'lightningcss';
 import { minify as htmlMinify } from 'html-minifier';
 import path from 'path';
+import autoprefixer from 'autoprefixer';
+import postcss from 'postcss';
 
 const userScriptHeader = `// ==UserScript==
 // @name         一些 ULearn 功能
@@ -36,7 +38,23 @@ export default defineConfig({
                   removeComments: true,
                 });
               } else if (prefix === 'css') {
-                minified = csso.minify(content).css;
+                const cssString = lightningcss
+                  .transform({
+                    filename: '',
+                    code: Buffer.from(content),
+                    minify: true,
+                  })
+                  .code.toString();
+
+                minified = postcss([
+                  autoprefixer({
+                    overrideBrowserslist: [
+                      '> 0.5%',
+                      'last 2 versions',
+                      'not dead',
+                    ],
+                  }),
+                ]).process(cssString).css;
               } else return match;
 
               // FIXME safe for backticks in content
@@ -74,13 +92,13 @@ export default defineConfig({
   build: {
     minify: 'terser',
     terserOptions: {
-      mangle: {
-        toplevel: true,
-        properties: { regex: /^_/ },
-        keep_classnames: false,
+      mangle: true,
+      compress: {
+        drop_console: false,
+        dead_code: false,
         keep_fnames: false,
+        keep_classnames: false,
       },
-      compress: { toplevel: true, keep_fnames: false },
       format: { comments: false },
     },
     lib: {

@@ -1,11 +1,13 @@
-export class BaseStore<T extends BaseStoreType> {
+export abstract class BaseStore<T extends BaseStoreType> {
   protected readonly _id: string;
   private _state: T;
+  protected _storeExclude: (keyof T)[];
   private _listeners: { [K in keyof T]?: Listener<T, K>[] } = {};
 
-  constructor(id: string, initialState: T) {
+  constructor(id: string, initialState: T, storeExclude?: (keyof T)[]) {
     this._id = id;
     this._state = { ...initialState };
+    this._storeExclude = [...(storeExclude || [])];
   }
 
   get(): T;
@@ -27,11 +29,17 @@ export class BaseStore<T extends BaseStoreType> {
     return this;
   }
 
-  subscribe<K extends keyof T>(key: K, fn: Listener<T, K>): () => void {
+  subscribe<K extends keyof T>(
+    key: K,
+    fn: Listener<T, K>,
+    initialCall = true
+  ): () => void {
     if (!this._listeners[key]) this._listeners[key] = [];
     this._listeners[key]!.push(fn);
 
-    fn({ value: this._state[key], oldValue: this._state[key] });
+    if (initialCall) {
+      fn({ value: this._state[key], oldValue: this._state[key] });
+    }
 
     return () => this.unsubscribe(key, fn);
   }
@@ -40,10 +48,11 @@ export class BaseStore<T extends BaseStoreType> {
     this._listeners[key] = this._listeners[key]?.filter((l) => l !== fn);
   }
 
-  setBatch(settings: Partial<T>) {
-    for (const key in settings) {
-      this.set(key as keyof T, settings[key as keyof T]!);
-    }
+  setBatch(settings: Partial<T>): this {
+    (Object.keys(settings) as (keyof T)[]).forEach((key) => {
+      this.set(key, settings[key]!);
+    });
+    return this;
   }
 
   reset(key?: keyof T) {
@@ -53,16 +62,22 @@ export class BaseStore<T extends BaseStoreType> {
     else this.setBatch({ ...defaultValue });
   }
 
-  getDefault(): T {
-    return {} as T;
-  }
+  protected abstract getDefault(): T;
 
   save() {
-    GM_setValue(this._id, this._state);
+    const stateToSave = { ...this._state };
+    for (const key of this._storeExclude) {
+      delete stateToSave[key];
+    }
+    GM_setValue(this._id, stateToSave);
   }
 
   load() {
     const savedState = GM_getValue(this._id, {});
+
+    for (const key of this._storeExclude) {
+      delete (savedState as Partial<T>)[key];
+    }
 
     this.setBatch(savedState);
   }

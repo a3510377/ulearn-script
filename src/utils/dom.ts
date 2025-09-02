@@ -33,7 +33,6 @@ export const waitForElement = <T extends Element = HTMLElement>(
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-    // TODO: add alert
   });
 };
 
@@ -42,6 +41,7 @@ export const createStyle = (
   node: Element = document.head
 ): HTMLStyleElement => {
   const css = document.createElement('style');
+
   css.classList.add('mk-style', MK_CUSTOM_COMPONENT);
   css.textContent = code;
   node.appendChild(css);
@@ -97,4 +97,25 @@ export const onClickOutside = (
 
   // Return stop function
   return () => document.removeEventListener('click', listener);
+};
+
+export const watchRemove = (el: Element, callback: (el: Element) => void) => {
+  const parent = el.parentNode;
+  if (!parent) return;
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const removedNode of mutation.removedNodes) {
+        if (removedNode === el) {
+          callback(el);
+          observer.disconnect();
+          return;
+        }
+      }
+    }
+  });
+
+  observer.observe(parent, { childList: true });
+
+  return observer.disconnect.bind(observer);
 };

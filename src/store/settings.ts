@@ -13,6 +13,10 @@ export class VideoSettingsStore extends BaseStore<VideoSettingsValues> {
     const current = this.get('theme');
     this.set('theme', current === 'light' ? 'dark' : 'light');
   }
+
+  protected getDefault(): VideoSettingsValues {
+    return DEFAULT_SETTINGS;
+  }
 }
 
 export const settingsStore = new VideoSettingsStore();
