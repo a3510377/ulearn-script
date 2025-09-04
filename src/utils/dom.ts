@@ -119,3 +119,24 @@ export const watchRemove = (el: Element, callback: (el: Element) => void) => {
 
   return observer.disconnect.bind(observer);
 };
+
+export const waitForAngular = (
+  timeout = 5000
+): Promise<angular.IAngularStatic> => {
+  const interval = 50;
+  const maxTries = timeout / interval;
+  let tries = 0;
+
+  return new Promise((resolve, reject) => {
+    const timer = setInterval(() => {
+      tries++;
+      if (unsafeWindow.angular) {
+        clearInterval(timer);
+        resolve(unsafeWindow.angular);
+      } else if (tries >= maxTries) {
+        clearInterval(timer);
+        reject(new Error('Angular not found within timeout'));
+      }
+    }, interval);
+  });
+};

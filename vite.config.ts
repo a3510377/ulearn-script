@@ -106,5 +106,8 @@ export default defineConfig({
       fileName: 'ULearn',
       formats: ['iife', 'es'],
     },
+    rollupOptions: {
+      external: ['angular'],
+    },
   },
 });

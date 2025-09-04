@@ -21,6 +21,7 @@ export const removeFooter = () => {
 };
 
 export const fixSomeStyle = () => {
+  // header and menu
   waitForElement('.layout-row.default-layout')
     .then((layout) => {
       const customLayout = document.createElement('div');
@@ -65,7 +66,18 @@ export const fixSomeStyle = () => {
           justify-content: space-between;
         }
 
+        .mobile-header .left-header img.logo {
+          margin: unset !important;
+        }
+
         @media (max-width: 920px) {
+          .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+          }
+
           .header .mk-component.custom-layout:not(.mk-open-menu) ul,
           .header .mk-component.custom-layout:not(.mk-open-menu) li {
             display: none !important;

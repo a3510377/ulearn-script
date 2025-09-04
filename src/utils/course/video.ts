@@ -4,7 +4,7 @@ import { waitForElement, watchRemove } from '#/dom';
 import { videoSettingsStore } from '~/videoSettings';
 import { useToast } from '../toast';
 
-export const withVideoDownload = () => {
+export const withDownload = () => {
   const toast = useToast();
 
   const hookGet: <T>(value: T, xhr: OriginXMLHttpRequest) => T = (

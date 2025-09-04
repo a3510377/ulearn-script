@@ -157,7 +157,7 @@ class ToastManager {
     if (!this.activeToasts.has(toast)) return;
 
     // remove event listeners
-    // toast.replaceWith(toast.cloneNode(true));
+    toast.replaceWith(toast.cloneNode(true));
 
     toast.classList.add('hidden');
     setTimeout(() => {
