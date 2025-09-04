@@ -15,7 +15,7 @@ export const removeFooter = () => {
           padding-bottom: 0 !important;
         }
       `);
-      e.remove();
+      e.style.display = 'none';
     })
     .catch(() => {});
 };
