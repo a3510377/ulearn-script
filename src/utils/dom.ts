@@ -1,5 +1,20 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 
+export const parseClass = (className?: string | string[]): string[] => {
+  return Array.isArray(className)
+    ? className
+    : className?.trim().split(/\s+/) || [];
+};
+
+export const createElement = <K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
+  className?: string | string[]
+): HTMLElementTagNameMap[K] => {
+  const element = document.createElement(tagName);
+  element.classList.add(...parseClass(className), MK_CUSTOM_COMPONENT);
+  return element;
+};
+
 export const waitForElement = <T extends Element = HTMLElement>(
   selector: string,
   timeoutMs = 10e3
@@ -40,9 +55,7 @@ export const createStyle = (
   code: string,
   node: Element = document.head
 ): HTMLStyleElement => {
-  const css = document.createElement('style');
-
-  css.classList.add('mk-style', MK_CUSTOM_COMPONENT);
+  const css = createElement('style', 'mk-style');
   css.textContent = code;
   node.appendChild(css);
 
@@ -51,14 +64,17 @@ export const createStyle = (
 
 export const createSvgFromString = (
   svgString: string,
-  node: Element = document.body
+  className?: string | string[]
 ): SVGSVGElement => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
   const svgElement = doc.documentElement as unknown as SVGSVGElement;
 
-  svgElement.classList.add('mk-svg', MK_CUSTOM_COMPONENT);
-  node.appendChild(svgElement);
+  svgElement.classList.add(
+    ...parseClass(className),
+    'mk-svg',
+    MK_CUSTOM_COMPONENT
+  );
 
   return svgElement;
 };

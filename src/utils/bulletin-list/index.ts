@@ -1,5 +1,4 @@
-import { MK_CUSTOM_COMPONENT } from '@/constants';
-import { createStyle, waitForElement } from '../dom';
+import { createElement, createStyle, waitForElement } from '../dom';
 
 export const featBulletinListCourseLink = async () => {
   const labelEl = await waitForElement(
@@ -7,9 +6,8 @@ export const featBulletinListCourseLink = async () => {
   ).catch(() => null);
 
   if (labelEl) {
-    const hrefEl = document.createElement('a');
+    const hrefEl = createElement('a', 'mk-course-link');
     hrefEl.setAttribute('ng-href', '/course/[[bulletin.id]]/content');
-    hrefEl.classList.add('mk-course-link', MK_CUSTOM_COMPONENT);
 
     labelEl.parentNode?.insertBefore(hrefEl, labelEl);
     hrefEl.appendChild(labelEl);

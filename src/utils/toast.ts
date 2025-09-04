@@ -1,6 +1,5 @@
 import { SVG_CLOSE, SVG_INFO, SVG_SUCCESS, SVG_WARN } from '@/assets/svg';
-import { MK_CUSTOM_COMPONENT } from '@/constants';
-import { createStyle, createSvgFromString } from './dom';
+import { createElement, createStyle, createSvgFromString } from './dom';
 
 export const TOAST_ICONS = {
   warn: SVG_WARN,
@@ -15,9 +14,8 @@ class ToastManager {
 
   constructor() {
     this.activeToasts = new Set();
-    this.viewport = document.createElement('div');
+    this.viewport = createElement('div', 'mk-toast-viewport');
     this.viewport.tabIndex = 0;
-    this.viewport.classList.add('mk-toast-viewport', MK_CUSTOM_COMPONENT);
     document.body.appendChild(this.viewport);
 
     document.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -169,17 +167,13 @@ class ToastManager {
   }
 
   private createToastElement(message: string, type: keyof typeof TOAST_ICONS) {
-    const toastEl = document.createElement('div');
-    const toastTextEl = document.createElement('div');
+    const toastEl = createElement('div', `mk-toast mk-toast-${type}`);
+    const toastTextEl = createElement('div', 'mk-toast-text');
     const toastIconEl = createSvgFromString(
-      TOAST_ICONS[type] || TOAST_ICONS.info
+      TOAST_ICONS[type] || TOAST_ICONS.info,
+      'mk-toast-icon'
     );
-    const toastCloseIconEl = createSvgFromString(SVG_CLOSE);
-
-    toastEl.classList.add('mk-toast', `mk-toast-${type}`, MK_CUSTOM_COMPONENT);
-    toastIconEl.classList.add('mk-toast-icon', MK_CUSTOM_COMPONENT);
-    toastTextEl.classList.add('mk-toast-text', MK_CUSTOM_COMPONENT);
-    toastCloseIconEl.classList.add('mk-toast-close', MK_CUSTOM_COMPONENT);
+    const toastCloseIconEl = createSvgFromString(SVG_CLOSE, 'mk-toast-close');
 
     toastTextEl.textContent = message;
     toastCloseIconEl.addEventListener('click', () => this.close(toastEl));

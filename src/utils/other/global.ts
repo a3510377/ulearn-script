@@ -1,6 +1,7 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 import { SVG_MENU } from '@/assets/svg';
 import {
+  createElement,
   createStyle,
   createSvgFromString,
   onClickOutside,
@@ -23,8 +24,8 @@ export const fixSomeStyle = () => {
   // header and menu
   waitForElement('.layout-row.default-layout')
     .then((layout) => {
-      const customLayout = document.createElement('div');
-      const customDropMenu = document.createElement('div');
+      const customLayout = createElement('div', 'custom-layout');
+      const customDropMenu = createElement('div', 'custom-drop-menu');
 
       customLayout.append(
         ...document.querySelectorAll(
@@ -32,9 +33,6 @@ export const fixSomeStyle = () => {
         )
       );
       customDropMenu.append(createSvgFromString(SVG_MENU));
-
-      customLayout.classList.add('custom-layout', MK_CUSTOM_COMPONENT);
-      customDropMenu.classList.add('custom-drop-menu', MK_CUSTOM_COMPONENT);
 
       layout.appendChild(customLayout);
       layout.appendChild(customDropMenu);
