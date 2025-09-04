@@ -8,16 +8,15 @@ import {
 } from '../dom';
 
 export const removeFooter = () => {
-  waitForElement('[data-category=tronclass-footer]')
-    .then((e) => {
-      createStyle(`$css
-        .main-content {
-          padding-bottom: 0 !important;
-        }
-      `);
-      e.style.display = 'none';
-    })
-    .catch(() => {});
+  createStyle(`$css
+    .main-content {
+      padding-bottom: 0 !important;
+    }
+
+    [data-category=tronclass-footer] {
+      display: none !important;
+    }
+  `);
 };
 
 export const fixSomeStyle = () => {
