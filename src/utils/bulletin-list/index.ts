@@ -7,7 +7,7 @@ export const featBulletinListCourseLink = async () => {
 
   if (labelEl) {
     const hrefEl = createElement('a', 'mk-course-link');
-    hrefEl.setAttribute('ng-href', '/course/[[bulletin.id]]/content');
+    hrefEl.setAttribute('ng-href', '/course/[[bulletin.course_id]]/content');
 
     labelEl.parentNode?.insertBefore(hrefEl, labelEl);
     hrefEl.appendChild(labelEl);
