@@ -17,7 +17,7 @@ const { pathname } = location;
 const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
 withDownload();
-// // /user/courses
+// /bulletin-list
 if (/^\/bulletin-list\/?$/.test(pathname)) {
   fixSomeBulletinListStyle();
   featBulletinListCourseLink();
