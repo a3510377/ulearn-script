@@ -8,16 +8,18 @@
   - 移除頁腳
   - 移除 logo 錯誤 margin
   - 添加 menu 響應式 (尚未全部完成)
-  - `/user/courses` 課程列表頁面響應式 (尚未全部完成)
   - 繞過下載/快轉限制
   - 繞過複製/選取限制(js + css)
   - 繞過畫面切換檢測
   - 繞過全螢幕檢測
+  - RWD 優化 (尚未全部完成)
 - `/course/(?<learningID>\d+)(?<viewing>/learning-activity(/full-screen)?)?`:
   - 影片倍速播放
   - 影片自動播放下一集(可看百分之幾後自動跳下一集)
 - `/bulletin-list`:
   - 公告列表頁面課程名稱可點擊進入課程
+- `/user/courses`
+  - 課程列表頁面課程名稱可點擊進入課程
 
 > 以上功能均以 **虎尾科技大學 (NFU) ULearn 平台** 為主要開發/測試環境，其他學校之 ULearn/TronClass 平台可能無法正常運作。
 
