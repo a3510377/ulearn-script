@@ -1,17 +1,11 @@
-import { createElement, createStyle, waitForElement } from '../dom';
+import { addHref, createStyle } from '../dom';
 
 export const featBulletinListCourseLink = async () => {
-  const labelEl = await waitForElement(
-    '.bulletin-container .course-name-label'
-  ).catch(() => null);
-
-  if (labelEl) {
-    const hrefEl = createElement('a', 'mk-course-link');
-    hrefEl.setAttribute('ng-href', '/course/[[bulletin.id]]/content');
-
-    labelEl.parentNode?.insertBefore(hrefEl, labelEl);
-    hrefEl.appendChild(labelEl);
-  }
+  addHref(
+    '.bulletin-container .course-name-label',
+    '/course/[[bulletin.course_id]]/content',
+    'mk-course-link'
+  );
 };
 
 export const fixSomeBulletinListStyle = () => {

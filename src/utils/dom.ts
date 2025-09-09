@@ -1,17 +1,19 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 
-export const parseClass = (className?: string | string[]): string[] => {
-  return Array.isArray(className)
-    ? className
-    : className?.trim().split(/\s+/) || [];
+export const parseClass = (
+  ...classNames: (string | string[] | undefined)[]
+): string[] => {
+  return classNames.flatMap((className) =>
+    Array.isArray(className) ? className : className?.trim().split(/\s+/) || []
+  );
 };
 
 export const createElement = <K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-  className?: string | string[]
+  ...className: (string | string[])[]
 ): HTMLElementTagNameMap[K] => {
   const element = document.createElement(tagName);
-  element.classList.add(...parseClass(className), MK_CUSTOM_COMPONENT);
+  element.classList.add(MK_CUSTOM_COMPONENT, ...parseClass(...className));
   return element;
 };
 
@@ -155,4 +157,20 @@ export const waitForAngular = (
       }
     }, interval);
   });
+};
+
+export const addHref = async (
+  querySelector: string,
+  href: string,
+  className: string | string[]
+) => {
+  const el = await waitForElement(querySelector).catch(() => null);
+
+  if (el) {
+    const hrefEl = createElement('a', 'mk-custom-link', className);
+    hrefEl.setAttribute('ng-href', href);
+
+    el.parentNode?.insertBefore(hrefEl, el);
+    hrefEl.appendChild(el);
+  }
 };

@@ -89,22 +89,23 @@ export default defineConfig({
     },
   },
   build: {
-    minify: 'terser',
-    terserOptions: {
-      mangle: true,
-      compress: {
-        drop_console: false,
-        dead_code: false,
-        keep_fnames: false,
-        keep_classnames: false,
-      },
-      format: { comments: false },
-    },
+    minify: false,
+    // minify: 'terser',
+    // terserOptions: {
+    //   mangle: true,
+    //   compress: {
+    //     drop_console: false,
+    //     dead_code: false,
+    //     keep_fnames: false,
+    //     keep_classnames: false,
+    //   },
+    //   format: { comments: false },
+    // },
     lib: {
       entry: 'src/main.ts',
       name: 'ULearn',
       fileName: 'ULearn',
-      formats: ['iife', 'es'],
+      formats: ['iife'],
     },
     rollupOptions: {
       external: ['angular'],

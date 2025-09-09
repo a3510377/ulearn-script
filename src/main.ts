@@ -9,6 +9,7 @@ import {
   featBulletinListCourseLink,
   fixSomeBulletinListStyle,
 } from './utils/bulletin-list';
+import { featCoursesLink, fixCoursesStyle } from './utils/course/courses';
 
 const PATH_MATCH =
   /^\/course\/(?<learningID>\d+)(?<viewing>\/learning-activity(\/full-screen)?)?/;
@@ -17,10 +18,13 @@ const { pathname } = location;
 const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
 withDownload();
-// // /user/courses
+// /bulletin-list
 if (/^\/bulletin-list\/?$/.test(pathname)) {
   fixSomeBulletinListStyle();
   featBulletinListCourseLink();
+} else if (/^\/user\/courses\/?$/.test(pathname)) {
+  featCoursesLink();
+  fixCoursesStyle();
 }
 // /course/xxx/learning-activity/full-screen
 else if (viewing && learningID) {

@@ -1,4 +1,4 @@
-import { MK_CUSTOM_COMPONENT } from '@/constants';
+import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from '@/constants';
 import { SVG_MENU } from '@/assets/svg';
 import {
   createElement,
@@ -37,16 +37,23 @@ export const fixSomeStyle = () => {
       layout.appendChild(customLayout);
       layout.appendChild(customDropMenu);
 
+      const bodyClassList = document.body.classList;
+      const customLayoutClassList = customLayout.classList;
       onClickOutside(layout, () => {
-        customLayout.classList.remove('mk-open-menu');
+        bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
+        customLayoutClassList.remove('mk-open-menu');
       });
       window.addEventListener('resize', () => {
         if (window.innerWidth >= 920) {
-          customLayout.classList.remove('mk-open-menu');
+          bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
+          customLayoutClassList.remove('mk-open-menu');
         }
       });
       customDropMenu.addEventListener('click', () => {
-        customLayout.classList.toggle('mk-open-menu');
+        bodyClassList.toggle(
+          MK_HIDDEN_SCROLL_CLASS,
+          customLayoutClassList.toggle('mk-open-menu')
+        );
       });
 
       createStyle(`$css
@@ -68,13 +75,6 @@ export const fixSomeStyle = () => {
         }
 
         @media (max-width: 920px) {
-          .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-          }
-
           .header .mk-component.custom-layout:not(.mk-open-menu) ul,
           .header .mk-component.custom-layout:not(.mk-open-menu) li {
             display: none !important;
@@ -156,6 +156,15 @@ export const fixSomeStyle = () => {
       console.log('Failed to fix some styles');
     });
 
+  createStyle(`$css
+    /* --- ${MK_HIDDEN_SCROLL_CLASS} ~ mk-hide-scroll --- */
+    body.mk-hide-scroll {
+      overflow: hidden;
+      visibility: visible;
+      padding-right: 14px;
+    }
+  `);
+
   // /user/courses
   createStyle(`$css
     .main-content .with-loading.content-under-nav-1 {
@@ -169,25 +178,6 @@ export const fixSomeStyle = () => {
     .user-index .menu-side {
       position: sticky;
       top: 20px;
-    }
-
-    .user-courses .course .item {
-      display: flex;
-      align-items: center;
-    }
-
-    .user-courses .course, .user-courses .course a {
-      transition: all 0.2s ease-out;
-    }
-
-    .user-courses .course .item .course-code-row {
-      width: unset !important;
-    }
-
-    @media (max-width: 920px) {
-      .user-courses .filter-conditions {
-        grid-template-columns: repeat(2, minmax(180px, 1fr));
-      }
     }
 
     @media (max-width: 1120px) {
