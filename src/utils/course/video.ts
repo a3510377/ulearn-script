@@ -1,6 +1,5 @@
 import { hook, type OriginXMLHttpRequest } from 'ajax-hook';
-
-import { waitForElement, watchRemove } from '#/dom';
+import { waitForElement } from '#/dom';
 import { videoSettingsStore } from '~/videoSettings';
 import { useToast } from '../toast';
 
@@ -11,8 +10,8 @@ export const withDownload = () => {
     value,
     xhr
   ) => {
-    const { host, hostname } = new URL(xhr.responseURL);
-    if (host === location.host && hostname.startsWith('/api/activities')) {
+    const { host, pathname } = new URL(xhr.responseURL);
+    if (host === location.host && pathname.startsWith('/api/activities')) {
       try {
         let changeAllowDownload = false;
         let changeAllowForwardSeeking = false;
@@ -25,7 +24,6 @@ export const withDownload = () => {
             changeAllowForwardSeeking = true;
             return true;
           }
-
           return value;
         });
 
@@ -48,10 +46,17 @@ export const withDownload = () => {
 export const tryPlayVideo = async () => {
   const toast = useToast();
 
-  const goToNext = () => {
-    waitForElement('button[ng-click=changeActivity(nextActivity)]').then(
-      (btn) => btn.click()
-    );
+  const goToNext = async () => {
+    const btn = await waitForElement(
+      'button[ng-click="changeActivity(nextActivity)"]'
+    ).catch(() => null);
+
+    if (!btn) {
+      toast.show('未找到下一個活動按鈕', { type: 'warn' });
+    } else {
+      toast.show('正在跳轉下一個活動', { type: 'info' });
+      (btn as HTMLButtonElement).click();
+    }
   };
 
   const video = await waitForElement<HTMLVideoElement>('video');
@@ -122,26 +127,59 @@ export const tryPlayVideo = async () => {
     }
   };
 
-  const removeWatchRemove = watchRemove(video, () => {
-    toast.show('正在跳轉下一個影片', { type: 'success' });
-    handleFinish();
-    tryPlayVideo();
-  });
+  const watchVideoChange = (() => {
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const n of m.removedNodes) {
+          if (n === video) {
+            console.log('[watchRemove] Video removed, re-init');
+            close();
+            tryPlayVideo();
+            return;
+          }
+        }
 
+        for (const n of m.addedNodes) {
+          if ((n as HTMLElement).tagName === 'VIDEO' && n !== video) {
+            console.log('[watchRemove] New video appeared');
+            close();
+            tryPlayVideo();
+            return;
+          }
+        }
+      }
+    });
+
+    const close = () => observer.disconnect();
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['src'],
+    });
+
+    return close;
+  })();
+
+  let isFinished = false;
   const handleFinish = () => {
+    if (isFinished) return;
+    isFinished = true;
+
     clearInterval(loop);
     video.removeEventListener('timeupdate', handleProgress);
     unsubPlaybackRate();
-    removeWatchRemove?.();
 
-    goToNext();
-    tryPlayVideo();
     tryingToPlayToast.close();
-    toast.show('正在跳轉下一個影片', { type: 'success' });
+    goToNext();
   };
 
-  // force check
   handleProgress();
   video.addEventListener('timeupdate', handleProgress);
   video.addEventListener('ended', handleFinish, { once: true });
+
+  return () => {
+    watchVideoChange();
+  };
 };

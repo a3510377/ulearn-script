@@ -21,6 +21,15 @@ export const removeFooter = () => {
 };
 
 export const fixSomeStyle = () => {
+  const removeMark = (el: HTMLElement) => (el.style.background = '');
+  waitForElement('#Symbol(water-mark)')
+    .then(removeMark)
+    .catch(() => {});
+
+  waitForElement('#symbol-water-mark')
+    .then(removeMark)
+    .catch(() => {});
+
   // header and menu
   waitForElement('.layout-row.default-layout')
     .then((layout) => {

@@ -4,7 +4,9 @@ export const parseClass = (
   ...classNames: (string | string[] | undefined)[]
 ): string[] => {
   return classNames.flatMap((className) =>
-    Array.isArray(className) ? className : className?.trim().split(/\s+/) || []
+    Array.isArray(className)
+      ? className
+      : className?.trim().split(/\s+/).filter(Boolean) || []
   );
 };
 
@@ -49,7 +51,15 @@ export const waitForElement = <T extends Element = HTMLElement>(
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    const startObservingDOM = () => {
+      observer.observe(document.body, { childList: true, subtree: true });
+    };
+
+    if (!document.body) {
+      window.addEventListener('DOMContentLoaded', startObservingDOM, {
+        once: true,
+      });
+    } else startObservingDOM();
   });
 };
 
@@ -118,24 +128,42 @@ export const onClickOutside = (
 };
 
 export const watchRemove = (el: Element, callback: (el: Element) => void) => {
-  const parent = el.parentNode;
-  if (!parent) return;
+  if (!el || !el.parentNode) return;
 
+  let parent = el.parentNode;
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const removedNode of mutation.removedNodes) {
-        if (removedNode === el) {
+        if (removedNode === el || (removedNode.contains?.(el) ?? false)) {
+          cleanup();
           callback(el);
-          observer.disconnect();
           return;
         }
       }
     }
+
+    if (!document.body.contains(el)) {
+      cleanup();
+      callback(el);
+    }
   });
 
-  observer.observe(parent, { childList: true });
+  const cleanup = () => observer.disconnect();
 
-  return observer.disconnect.bind(observer);
+  observer.observe(parent, { childList: true, subtree: true });
+
+  const interval = setInterval(() => {
+    if (!document.body.contains(el)) {
+      clearInterval(interval);
+      cleanup();
+      callback(el);
+    }
+  }, 2000);
+
+  return () => {
+    clearInterval(interval);
+    cleanup();
+  };
 };
 
 export const waitForAngular = (
@@ -148,7 +176,7 @@ export const waitForAngular = (
   return new Promise((resolve, reject) => {
     const timer = setInterval(() => {
       tries++;
-      if (unsafeWindow.angular) {
+      if (unsafeWindow.angular && typeof unsafeWindow.angular === 'object') {
         clearInterval(timer);
         resolve(unsafeWindow.angular);
       } else if (tries >= maxTries) {

@@ -154,8 +154,7 @@ class ToastManager {
   close(toast: HTMLDivElement, byEsc = false) {
     if (!this.activeToasts.has(toast)) return;
 
-    // remove event listeners
-    toast.replaceWith(toast.cloneNode(true));
+    toast.replaceWith(toast);
 
     toast.classList.add('hidden');
     setTimeout(() => {
@@ -176,9 +175,9 @@ class ToastManager {
     const toastCloseIconEl = createSvgFromString(SVG_CLOSE, 'mk-toast-close');
 
     toastTextEl.textContent = message;
-    toastCloseIconEl.addEventListener('click', () => this.close(toastEl));
 
     toastEl.append(toastIconEl, toastTextEl, toastCloseIconEl);
+    toastCloseIconEl.addEventListener('click', () => this.close(toastEl));
     return toastEl;
   }
 }
