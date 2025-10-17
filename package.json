@@ -17,7 +17,6 @@
   "dependencies": {
     "@types/angular": "^1.8.9",
     "@types/tampermonkey": "^5.0.4",
-    "ajax-hook": "^3.0.3",
     "autoprefixer": "^10.4.21",
     "html-minifier": "^4.0.0",
     "lightningcss": "^1.30.1",

@@ -1,46 +1,34 @@
-import { hook, type OriginXMLHttpRequest } from 'ajax-hook';
 import { waitForElement } from '#/dom';
 import { videoSettingsStore } from '~/videoSettings';
 import { useToast } from '../toast';
+import { requestHook } from '../request';
 
 export const withDownload = () => {
   const toast = useToast();
 
-  const hookGet: <T>(value: T, xhr: OriginXMLHttpRequest) => T = (
-    value,
-    xhr
-  ) => {
-    const { host, pathname } = new URL(xhr.responseURL);
-    if (host === location.host && pathname.startsWith('/api/activities')) {
-      try {
-        let changeAllowDownload = false;
-        let changeAllowForwardSeeking = false;
-        const data = JSON.parse(xhr.responseText, (key, value) => {
-          if (key === 'allow_download' && !value) {
-            changeAllowDownload = true;
-            return true;
-          }
-          if (key === 'allow_forward_seeking' && !value) {
-            changeAllowForwardSeeking = true;
-            return true;
-          }
-          return value;
-        });
+  requestHook.registerHook(
+    (url) => url.startsWith('/api/activities'),
+    (responseText) => {
+      let changeAllowDownload = false;
+      let changeAllowForwardSeeking = false;
+      const data = JSON.parse(responseText, (key, value) => {
+        if (key === 'allow_download' && value === false) {
+          changeAllowDownload = true;
+          return true;
+        }
+        if (key === 'allow_forward_seeking' && value === false) {
+          changeAllowForwardSeeking = true;
+          return true;
+        }
+        return value;
+      });
 
-        if (changeAllowDownload) toast.show('以強制允許下載');
-        if (changeAllowForwardSeeking) toast.show('以強制允許快轉');
+      if (changeAllowDownload) toast.show('以強制允許下載');
+      if (changeAllowForwardSeeking) toast.show('以強制允許快轉');
 
-        return data;
-      } catch {
-        toast.show('解析 JSON 失敗', { type: 'error' });
-        console.error('Failed to parse JSON:', xhr.responseText);
-      }
+      return JSON.stringify(data);
     }
-
-    return value;
-  };
-
-  hook({ response: { getter: hookGet }, responseText: { getter: hookGet } });
+  );
 };
 
 export const tryPlayVideo = async () => {
@@ -59,7 +47,14 @@ export const tryPlayVideo = async () => {
     }
   };
 
-  const video = await waitForElement<HTMLVideoElement>('video');
+  const video = await waitForElement<HTMLVideoElement>('video').catch(
+    () => null
+  );
+
+  if (!video) {
+    toast.show('未找到影片元素', { type: 'error' });
+    return;
+  }
 
   let playButton: HTMLElement | null = null;
   waitForElement('.mvp-toggle-play').then((btn) => (playButton = btn));
