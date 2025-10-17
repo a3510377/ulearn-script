@@ -28,46 +28,53 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Build all
-        run: yarn build
-
       - name: Determine release type
         id: release_type
         run: |
-          if [[ "${GITHUB_REF}" == refs/heads/main ]]; then
-            echo "type=dev" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "type=latest" >> $GITHUB_OUTPUT
             SHORT_SHA=$(git rev-parse --short HEAD)
-            DEV_TAG="dev-$(date +'%Y%m%d')-${SHORT_SHA}"
-            echo "tag_name=$DEV_TAG" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == v*.*.* ]]; then
+            echo "tag_name=$SHORT_SHA" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "type=release" >> $GITHUB_OUTPUT
             echo "tag_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           else
-            echo "type=unknown" >> $GITHUB_OUTPUT
-          fi
+            echo "type=skip" >> $GITHUB_OUTPUT
+
+      - name: Build all
+        run: yarn build
+
+      - name: Replace version placeholder in dist/*.js
+        if: steps.release_type.outputs.type != 'skip'
+        run: |
+          VERSION="${{ steps.release_type.outputs.tag_name }}"
+          for f in dist/*.js; do
+            sed -i "s/{VERSION_PLACEHOLDER}/$VERSION/g" "$f"
+          done
 
       - name: Generate release notes
         id: release_notes
+        if: steps.release_type.outputs.type != 'skip'
         run: |
           TYPE="${{ steps.release_type.outputs.type }}"
           TAG="${{ steps.release_type.outputs.tag_name }}"
-          if [ "$TYPE" != "unknown" ]; then
-            if [ "$TYPE" == "release" ]; then
-              NOTES=$(git log -1 --pretty=format:"%s%n%n%b")
-            else
-              NOTES=$(git log -10 --pretty=format:"- %s (%h)")
-            fi
-            echo "body<<EOF" >> $GITHUB_OUTPUT
-            echo "$NOTES" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+
+          if [[ "$TYPE" == "release" ]]; then
+            NOTES=$(git log -1 --pretty=format:"%s%n%n%b")
+          else
+            NOTES=$(git log -10 --pretty=format:"- %s (%h)")
           fi
 
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
-        if: steps.release_type.outputs.type != 'unknown'
+        if: steps.release_type.outputs.type != 'skip'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_type.outputs.tag_name }}
-          name: ${{ steps.release_type.outputs.type == 'release' && 'Release' || 'Dev Release' }} ${{ steps.release_type.outputs.tag_name }}
+          name: ${{ steps.release_type.outputs.type == 'release' && 'Release' || 'Latest Version' }} ${{ steps.release_type.outputs.tag_name }}
           body: ${{ steps.release_notes.outputs.body }}
           files: dist/*
         env:
