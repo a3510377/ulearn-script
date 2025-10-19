@@ -121,7 +121,8 @@ export const initSettingsMenu = () => {
 
     top = Math.max(minTop, Math.min(maxTop, top));
 
-    menuPanelEl.style.top = `${top}px`;
+    const topPercentage = (top / viewportHeight) * 100;
+    menuPanelEl.style.top = `${topPercentage}%`;
     menuPanelEl.classList.toggle('right', isRight);
   };
 
@@ -197,18 +198,6 @@ export const initSettingsMenu = () => {
     }, DRAG_DELAY);
   };
 
-  const applyNextOnlyY = (y: number) => {
-    const { offsetHeight: height } = fabButtonEl;
-    const maxTop = window.innerHeight - height - BOUNDARY_PADDING;
-
-    const clampedY = Math.max(
-      BOUNDARY_PADDING,
-      Math.min(maxTop, y - height / 2)
-    );
-
-    fabButtonEl.style.top = `${clampedY}px`;
-  };
-
   const applyNextPos = () => {
     rafId = 0;
     if (!nextPos) return;
@@ -216,10 +205,16 @@ export const initSettingsMenu = () => {
     nextPos = null;
 
     // Boundaries
-    const { offsetWidth: width } = fabButtonEl;
+    const { offsetWidth: width, offsetHeight: height } = fabButtonEl;
+    const viewportHeight = window.innerHeight;
+    const maxTop = viewportHeight - height - BOUNDARY_PADDING;
+    const clampedY = Math.max(
+      BOUNDARY_PADDING,
+      Math.min(maxTop, y - height / 2)
+    );
     const clampedX = Math.min(window.innerWidth - width, x - width / 2);
-    const isLeft = clampedX + width / 2 < window.innerWidth / 2;
 
+    const isLeft = clampedX + width / 2 < window.innerWidth / 2;
     if (isLeft) {
       fabButtonEl.style.left = `${clampedX}px`;
       fabButtonEl.style.right = 'unset';
@@ -228,7 +223,7 @@ export const initSettingsMenu = () => {
       fabButtonEl.style.right = `${window.innerWidth - clampedX - width}px`;
     }
 
-    applyNextOnlyY(y);
+    fabButtonEl.style.top = `${Math.round((clampedY / viewportHeight) * 100)}%`;
     fabButtonEl.style.transform = 'translateY(0)';
   };
 
@@ -299,34 +294,6 @@ export const initSettingsMenu = () => {
   settingsMenuEl.append(menuPanelEl, fabButtonEl);
   document.body.appendChild(settingsMenuEl);
 
-  let oldHeight = window.innerHeight;
-
-  // handle window resize, reposition FAB and panel
-  const handleResize = () => {
-    const height = window.innerHeight;
-    const rect = fabButtonEl.getBoundingClientRect();
-
-    nextPos = null;
-    applyNextOnlyY(
-      Math.floor(
-        (height / oldHeight) * (fabButtonEl.offsetTop + rect.height / 2)
-      )
-    );
-
-    if (!menuPanelEl.classList.contains('mk-hide')) {
-      updateMenuPanelPosition();
-    }
-
-    oldHeight = height;
-  };
-
-  let resizeTimeout: number;
-  const debouncedResize = () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = window.setTimeout(handleResize, 100);
-  };
-
-  window.addEventListener('resize', debouncedResize);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointermove', onPointerMove);
   fabButtonEl.addEventListener('pointerdown', onPointerDown);
@@ -338,13 +305,11 @@ export const initSettingsMenu = () => {
   });
 
   return () => {
-    clearTimeout(resizeTimeout);
     panelCleanup();
     cleanupSettingsMenuStyle();
     fabButtonEl.removeEventListener('pointerdown', onPointerDown);
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
-    window.removeEventListener('resize', debouncedResize);
     cleanupClickOutside();
   };
 };
