@@ -2,6 +2,55 @@
 
 > 一個使用 TypeScript + Vite 建構的 uLearn 前端腳本專案。
 
+![Script Settings](./docs/images/script-settings.png)
+
+## 安裝與使用教學
+
+### 環境需求
+
+- Node.js 20 以上
+- npm 或 yarn
+
+### 安裝步驟
+
+1. 下載或 clone 本專案：
+
+```bash
+git clone https://github.com/a3510377/ulearn-script.git
+```
+
+2. 進入專案資料夾：
+
+```bash
+cd my-school
+```
+
+3. 安裝依賴套件：
+
+```bash
+npm install
+# 或
+yarn install
+```
+
+4. 建置專案：
+
+```bash
+npm run build
+# 或
+yarn build
+```
+
+### 使用方式
+
+1. 於瀏覽器安裝 [Tampermonkey](https://www.tampermonkey.net/) 擴充套件。
+2. 將 `dist` 目錄下的腳本安裝到 Tampermonkey，或直接下載發布版本。
+3. 進入虎尾科技大學 ULearn 平台，腳本將自動啟用。
+
+### 注意事項
+
+- 若有新功能需求或回報 bug，歡迎至 GitHub issue 留言。
+
 ## 功能列表
 
 - `*`:
