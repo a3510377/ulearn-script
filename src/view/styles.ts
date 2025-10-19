@@ -83,9 +83,24 @@ export const setupSettingsMenuStyle = () => {
       width: 80%;
       max-width: 40rem;
       padding: 1rem;
-      box-shadow: 0 0 10px #0000004d;
+      box-shadow: 0 4px 20px #0000004d;
       border-radius: 1rem;
-      background-color: #b8b8b8;
+      background-color: #9bdad6;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+      transform-origin: left center;
+    }
+
+    .mk-settings-menu-panel:not(.mk-hide) {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .mk-settings-menu-panel.right {
+      transform-origin: right center;
     }
 
     .mk-settings-menu-panel .mk-settings-title {

@@ -60,7 +60,7 @@ class ToastManager {
 
       .mk-toast.hidden {
         opacity: 0;
-        transform: translateX(calc(100% * attr(direction, 1)));
+        transform: translateX(calc(100% * var(--direction, 1)));
       }
 
       .mk-toast-icon {
@@ -137,7 +137,7 @@ class ToastManager {
 
     const tryClose = () => {
       if (Math.abs(deltaX) > 80) {
-        toastEl.dataset.direction = deltaX > 0 ? '-1' : '1';
+        toastEl.style.setProperty('--direction', deltaX > 0 ? '-1' : '1');
         this.close(toastEl);
       } else toastEl.style.transform = '';
 

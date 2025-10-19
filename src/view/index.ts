@@ -23,16 +23,106 @@ export const initSettingsMenu = () => {
     const fabRect = fabButtonEl.getBoundingClientRect();
     const isRight = fabButtonEl.classList.contains('right');
 
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const gap = 12; // Gap between FAB and panel
+
+    // Temporarily show panel to get accurate dimensions
+    const wasHidden = menuPanelEl.classList.contains('mk-hide');
+    if (wasHidden) {
+      menuPanelEl.style.visibility = 'hidden';
+      menuPanelEl.classList.remove('mk-hide');
+    }
+
+    const panelRect = menuPanelEl.getBoundingClientRect();
+    const panelWidth = panelRect.width;
+    const panelHeight = panelRect.height;
+
+    if (wasHidden) {
+      menuPanelEl.classList.add('mk-hide');
+      menuPanelEl.style.visibility = '';
+    }
+
+    // Determine horizontal position
+    let left: number;
+    let right: number | null = null;
+
     if (isRight) {
-      menuPanelEl.style.right = `${fabRect.width + 8}px`;
+      // FAB is on right side, try to show panel on left
+      const rightPos = viewportWidth - fabRect.left + gap;
+      const leftEdge = viewportWidth - rightPos - panelWidth;
+
+      // Check if panel would overflow on left
+      if (leftEdge < BOUNDARY_PADDING) {
+        // Not enough space on left, calculate best position
+        const spaceOnLeft = fabRect.left - gap - BOUNDARY_PADDING;
+        const spaceOnRight =
+          viewportWidth - fabRect.right - gap - BOUNDARY_PADDING;
+
+        if (spaceOnLeft >= panelWidth) {
+          // Can fit on left
+          right = viewportWidth - fabRect.left + gap;
+        } else if (spaceOnRight >= panelWidth) {
+          // Better fit on right (inside)
+          right = viewportWidth - fabRect.right - gap;
+        } else {
+          // Neither side fits perfectly, use side with more space
+          if (spaceOnLeft > spaceOnRight) {
+            right = BOUNDARY_PADDING;
+          } else {
+            right = viewportWidth - fabRect.right - gap;
+          }
+        }
+      } else {
+        right = rightPos;
+      }
+
+      menuPanelEl.style.right = `${right}px`;
       menuPanelEl.style.left = 'unset';
     } else {
-      menuPanelEl.style.left = `${fabRect.width + 8}px`;
+      // FAB is on left side, try to show panel on right
+      left = fabRect.right + gap;
+
+      // Check if panel would overflow on right
+      if (left + panelWidth > viewportWidth - BOUNDARY_PADDING) {
+        // Not enough space on right, calculate best position
+        const spaceOnRight =
+          viewportWidth - fabRect.right - gap - BOUNDARY_PADDING;
+        const spaceOnLeft = fabRect.left - gap - BOUNDARY_PADDING;
+
+        if (spaceOnRight >= panelWidth) {
+          // Can fit on right
+          left = fabRect.right + gap;
+        } else if (spaceOnLeft >= panelWidth) {
+          // Better fit on left (inside)
+          left = Math.max(BOUNDARY_PADDING, fabRect.left - panelWidth - gap);
+        } else if (spaceOnRight > spaceOnLeft) {
+          // Neither side fits perfectly, use side with more space
+          left = fabRect.right + gap;
+        } else {
+          left = Math.max(
+            BOUNDARY_PADDING,
+            viewportWidth - panelWidth - BOUNDARY_PADDING
+          );
+        }
+      }
+
+      menuPanelEl.style.left = `${left}px`;
       menuPanelEl.style.right = 'unset';
     }
 
-    // Align panel vertically with FAB
-    menuPanelEl.style.top = `${fabRect.top}px`;
+    // Determine vertical position
+    // Try to align with FAB center first
+    let top = fabRect.top + fabRect.height / 2 - panelHeight / 2;
+
+    // Clamp to viewport boundaries
+    const minTop = BOUNDARY_PADDING;
+    const maxTop = viewportHeight - panelHeight - BOUNDARY_PADDING;
+
+    top = Math.max(minTop, Math.min(maxTop, top));
+
+    menuPanelEl.style.top = `${top}px`;
+    menuPanelEl.classList.toggle('right', isRight);
   };
 
   let suppressNextClick = false;
@@ -42,10 +132,18 @@ export const initSettingsMenu = () => {
       return;
     }
 
-    if (menuPanelEl.classList.contains('mk-hide')) {
+    const isCurrentlyHidden = menuPanelEl.classList.contains('mk-hide');
+    if (isCurrentlyHidden) {
+      // Before showing, update position
       updateMenuPanelPosition();
+
+      // Small delay to ensure position is set before animation
+      requestAnimationFrame(() => {
+        menuPanelEl.classList.remove('mk-hide');
+      });
+    } else {
+      menuPanelEl.classList.add('mk-hide');
     }
-    menuPanelEl.classList.toggle('mk-hide');
   });
 
   let rafId = 0;
@@ -59,6 +157,10 @@ export const initSettingsMenu = () => {
   const setDraggingState = (dragging: boolean) => {
     fabButtonEl.classList.toggle('dragging', dragging);
     document.body.style.userSelect = dragging ? 'none' : '';
+
+    if (dragging) {
+      menuPanelEl.classList.add('mk-hide');
+    }
   };
 
   const onPointerDown = (e: PointerEvent) => {
@@ -85,13 +187,26 @@ export const initSettingsMenu = () => {
         fabButtonEl.addEventListener('transitionrun', updateTransform);
         fabButtonEl.addEventListener(
           'transitionend',
-          () =>
-            fabButtonEl.removeEventListener('transitionrun', updateTransform),
+          () => {
+            fabButtonEl.removeEventListener('transitionrun', updateTransform);
+          },
           { once: true }
         );
         fabButtonEl.setPointerCapture(e.pointerId);
       }
     }, DRAG_DELAY);
+  };
+
+  const applyNextOnlyY = (y: number) => {
+    const { offsetHeight: height } = fabButtonEl;
+    const maxTop = window.innerHeight - height - BOUNDARY_PADDING;
+
+    const clampedY = Math.max(
+      BOUNDARY_PADDING,
+      Math.min(maxTop, y - height / 2)
+    );
+
+    fabButtonEl.style.top = `${clampedY}px`;
   };
 
   const applyNextPos = () => {
@@ -101,20 +216,10 @@ export const initSettingsMenu = () => {
     nextPos = null;
 
     // Boundaries
-    const { offsetWidth: width, offsetHeight: height } = fabButtonEl;
-    const maxLeft = window.innerWidth - width;
-    const maxTop = window.innerHeight - height - BOUNDARY_PADDING;
-
-    const clampedX = Math.max(
-      BOUNDARY_PADDING,
-      Math.min(maxLeft, x - width / 2)
-    );
-    const clampedY = Math.max(
-      BOUNDARY_PADDING,
-      Math.min(maxTop, y - height / 2)
-    );
-
+    const { offsetWidth: width } = fabButtonEl;
+    const clampedX = Math.min(window.innerWidth - width, x - width / 2);
     const isLeft = clampedX + width / 2 < window.innerWidth / 2;
+
     if (isLeft) {
       fabButtonEl.style.left = `${clampedX}px`;
       fabButtonEl.style.right = 'unset';
@@ -122,7 +227,8 @@ export const initSettingsMenu = () => {
       fabButtonEl.style.left = 'unset';
       fabButtonEl.style.right = `${window.innerWidth - clampedX - width}px`;
     }
-    fabButtonEl.style.top = `${clampedY}px`;
+
+    applyNextOnlyY(y);
     fabButtonEl.style.transform = 'translateY(0)';
   };
 
@@ -193,6 +299,34 @@ export const initSettingsMenu = () => {
   settingsMenuEl.append(menuPanelEl, fabButtonEl);
   document.body.appendChild(settingsMenuEl);
 
+  let oldHeight = window.innerHeight;
+
+  // handle window resize, reposition FAB and panel
+  const handleResize = () => {
+    const height = window.innerHeight;
+    const rect = fabButtonEl.getBoundingClientRect();
+
+    nextPos = null;
+    applyNextOnlyY(
+      Math.floor(
+        (height / oldHeight) * (fabButtonEl.offsetTop + rect.height / 2)
+      )
+    );
+
+    if (!menuPanelEl.classList.contains('mk-hide')) {
+      updateMenuPanelPosition();
+    }
+
+    oldHeight = height;
+  };
+
+  let resizeTimeout: number;
+  const debouncedResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = window.setTimeout(handleResize, 100);
+  };
+
+  window.addEventListener('resize', debouncedResize);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointermove', onPointerMove);
   fabButtonEl.addEventListener('pointerdown', onPointerDown);
@@ -204,11 +338,13 @@ export const initSettingsMenu = () => {
   });
 
   return () => {
+    clearTimeout(resizeTimeout);
     panelCleanup();
     cleanupSettingsMenuStyle();
     fabButtonEl.removeEventListener('pointerdown', onPointerDown);
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('resize', debouncedResize);
     cleanupClickOutside();
   };
 };

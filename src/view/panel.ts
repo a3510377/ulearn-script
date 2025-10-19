@@ -15,7 +15,7 @@ export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
   const tabButtons = [
     { id: 'features', label: '功能開關', icon: '⚙️' },
     { id: 'video', label: '影片設定', icon: '🎬' },
-    { id: 'interface', label: '介面設定', icon: '🎨' },
+    // { id: 'interface', label: '介面設定', icon: '🎨' },
     { id: 'manage', label: '管理', icon: '🛠️' },
   ];
 

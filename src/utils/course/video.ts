@@ -117,11 +117,13 @@ export const tryPlayVideo = async () => {
   }, 1000);
 
   const handleProgress = () => {
-    if (
-      video.currentTime / video.duration >=
-      videoSettingsStore.get('customAutoNextThreshold')
-    ) {
-      handleFinish();
+    if (!videoSettingsStore.get('autoNext')) return;
+
+    if (video.duration > 0) {
+      const ratio = video.currentTime / video.duration;
+      if (ratio >= videoSettingsStore.get('customAutoNextThreshold')) {
+        handleFinish();
+      }
     }
   };
 

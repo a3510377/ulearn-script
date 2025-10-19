@@ -1,7 +1,6 @@
 import { BaseStore } from './base';
 
 export const DEFAULT_SETTINGS: SettingsValues = Object.freeze({
-  theme: 'light',
   // Feature toggles
   removeFooter: true,
   blockEvents: true,

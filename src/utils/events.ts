@@ -75,8 +75,8 @@ export const blockEvents = (
   };
   events.forEach((ev) => {
     defineBlockedHandler(target, ev);
-    addEventHook(ev, () => true);
     target.addEventListener(ev, handler, true);
+    addEventHook(ev, () => true);
   });
 };
 
@@ -132,8 +132,10 @@ export const blockEventsSetup = () => {
     'focus',
   ];
 
+  // Add our capturing stopper first, then prevent further registrations
   visibilityEvents.forEach((ev) => {
     defineBlockedHandler(window, ev);
+    window.addEventListener(ev, (e) => e.stopPropagation(), true);
     addEventHook(ev, alwaysTrue);
   });
 
