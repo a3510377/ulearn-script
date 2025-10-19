@@ -10,6 +10,7 @@ const userScriptHeader = `// ==UserScript==
 // @namespace    https://github.com/a3510377/ulearn-script
 // @version      {VERSION_PLACEHOLDER}
 // @description  移除頁腳、修復部份樣式、繞過下載限制、繞過快轉限制、繞過複製限制、繞過畫面切換檢測、繞過全螢幕檢測等等，開發時使用 NFU ULearn，其它學校可能不適用
+// @license      MIT
 // @author       MonkeyCat
 // @match        https://ulearn.nfu.edu.tw/*
 // @grant        GM_setValue
