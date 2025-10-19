@@ -10,27 +10,20 @@ class NotificationManager {
     this.toast.show(message, { duration, type });
   }
 
-  featureEnabled(featureName: string, silent = false) {
-    this.notify(`✓ ${this.getFeatureLabel(featureName)} 已啟用`, {
-      type: 'success',
-      duration: 2000,
-      silent,
-    });
-  }
-
-  featureDisabled(featureName: string, silent = false) {
-    this.notify(`✗ ${this.getFeatureLabel(featureName)} 已停用`, {
-      type: 'info',
-      duration: 2000,
-      silent,
-    });
-  }
-
-  settingChanged(settingName: string, value: any, silent = false) {
-    this.notify(
-      `${this.getFeatureLabel(settingName)}: ${this.formatValue(value)}`,
-      { type: 'info', duration: 2000, silent }
-    );
+  settingChanged(featureName: string, value: any, silent = false) {
+    if (value) {
+      this.notify(`${this.getFeatureLabel(featureName)} 已啟用`, {
+        type: 'success',
+        duration: 2000,
+        silent,
+      });
+    } else {
+      this.notify(`${this.getFeatureLabel(featureName)} 已停用`, {
+        type: 'warn',
+        duration: 2000,
+        silent,
+      });
+    }
   }
 
   error(message: string, error?: Error) {
@@ -65,13 +58,8 @@ class NotificationManager {
       autoNextThresholdVariance: '隨機偏移',
       theme: '主題',
     };
+
     return labels[featureName] || featureName;
-  }
-
-  private formatValue(value: any): string {
-    if (typeof value === 'boolean') return value ? '開啟' : '關閉';
-
-    return String(value);
   }
 }
 

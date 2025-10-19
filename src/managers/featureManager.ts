@@ -15,9 +15,9 @@ class FeatureManager {
     return {
       enable: () => {
         if (feature.enabled) return;
+        const cleanup = enableFn() ?? undefined;
 
-        const cleanup = enableFn();
-        feature.cleanup = cleanup || undefined;
+        feature.cleanup = cleanup;
         feature.enabled = true;
         console.log(`[Feature] "${name}" 已啟用`);
       },
@@ -26,8 +26,8 @@ class FeatureManager {
 
         if (disableFn) {
           disableFn();
-        } else if (feature.cleanup) {
-          feature.cleanup();
+        } else {
+          feature.cleanup?.();
         }
 
         feature.enabled = false;

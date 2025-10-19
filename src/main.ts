@@ -56,7 +56,8 @@ const setupReactiveFeatures = () => {
       ({ value }: { value: boolean }) => {
         if (value) feature.enable();
         else feature.disable();
-        notificationManager.featureEnabled(key, value);
+
+        notificationManager.settingChanged(key, value);
       },
       false
     );
@@ -70,9 +71,7 @@ const setupReactiveFeatures = () => {
   videoSettingKeys.forEach((k) =>
     videoSettingsStore.subscribe(
       k,
-      ({ value }) => {
-        notificationManager.settingChanged(k, value);
-      },
+      ({ value }) => notificationManager.settingChanged(k, value),
       false
     )
   );
