@@ -2,7 +2,7 @@
 
 > 一個使用 TypeScript + Vite 建構的 uLearn 前端腳本專案。
 
-![Script Settings](./.github/assets/script-settings.png)
+![Script Settings](./.github/assets/script-setting.png)
 
 ## 安裝與使用教學
 
