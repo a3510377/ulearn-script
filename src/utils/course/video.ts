@@ -1,12 +1,13 @@
+import { requestHook } from '../request';
+import { useToast } from '../toast';
+
 import { waitForElement } from '#/dom';
 import { videoSettingsStore } from '~/videoSettings';
-import { useToast } from '../toast';
-import { requestHook } from '../request';
 
 export const withDownload = () => {
   const toast = useToast();
 
-  requestHook.registerHook(
+  return requestHook.registerHook(
     (url) => url.startsWith('/api/activities'),
     (responseText) => {
       let changeAllowDownload = false;
@@ -56,6 +57,8 @@ export const tryPlayVideo = async () => {
     return;
   }
 
+  video.scrollIntoView({ behavior: 'smooth' });
+
   let playButton: HTMLElement | null = null;
   waitForElement('.mvp-toggle-play').then((btn) => (playButton = btn));
 
@@ -90,7 +93,7 @@ export const tryPlayVideo = async () => {
     }, 400);
   };
 
-  const unsubPlaybackRate = videoSettingsStore.subscribe(
+  const unsubscribePlaybackRate = videoSettingsStore.subscribe(
     'playbackRate',
     ({ value }) => changeRate(value),
     false
@@ -164,7 +167,7 @@ export const tryPlayVideo = async () => {
 
     clearInterval(loop);
     video.removeEventListener('timeupdate', handleProgress);
-    unsubPlaybackRate();
+    unsubscribePlaybackRate();
 
     tryingToPlayToast.close();
     goToNext();

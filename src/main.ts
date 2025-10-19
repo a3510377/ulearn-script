@@ -1,15 +1,22 @@
-import { blockEventsSetup } from './utils/events';
-import { tryPlayVideo, withDownload } from '#/course/video';
-import {
-  enableUserSelectStyle,
-  fixSomeStyle,
-  removeFooter,
-} from './utils/other/global';
+import { featureManager, notificationManager } from '@/managers';
+import settingsStore from '@/store/settings';
+import videoSettingsStore from '@/store/videoSettings';
+
 import {
   featBulletinListCourseLink,
   fixSomeBulletinListStyle,
 } from './utils/bulletin-list';
 import { featCoursesLink, fixCoursesStyle } from './utils/course/courses';
+import { blockEventsSetup } from './utils/events';
+import {
+  enableUserSelectStyle,
+  fixSomeStyle,
+  removeFooter,
+} from './utils/other/global';
+import { initSettingsMenu } from './view/index';
+
+import './style';
+import { tryPlayVideo, withDownload } from '#/course/video';
 
 const PATH_MATCH =
   /^\/course\/(?<learningID>\d+)(?<viewing>\/learning-activity(\/full-screen)?)?/;
@@ -17,7 +24,62 @@ const PATH_MATCH =
 const { pathname } = location;
 const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
-withDownload();
+// load persisted settings first
+settingsStore.load();
+videoSettingsStore.load();
+
+// Register all features with the feature manager
+const features = {
+  removeFooter: featureManager.register('removeFooter', removeFooter),
+  blockEvents: featureManager.register('blockEvents', blockEventsSetup),
+  enableUserSelect: featureManager.register(
+    'enableUserSelect',
+    enableUserSelectStyle
+  ),
+  fixStyle: featureManager.register('fixStyle', fixSomeStyle),
+  allowDownload: featureManager.register('allowDownload', withDownload),
+} as const;
+
+// Setup reactive features that respond to settings changes
+const setupReactiveFeatures = () => {
+  // Explicit, type-safe list of feature toggle keys backed by settingsStore
+  const featureKeys = Object.keys(features) as (keyof typeof features)[];
+
+  // Helper to enable/disable a feature based on setting value, with notification
+  const wireFeature = (key: keyof typeof features) => {
+    const feature = features[key];
+    // Apply initial state
+    if (settingsStore.get(key)) feature.enable();
+    // React to changes
+    settingsStore.subscribe(
+      key,
+      ({ value }: { value: boolean }) => {
+        if (value) feature.enable();
+        else feature.disable();
+        notificationManager.featureEnabled(key, value);
+      },
+      false
+    );
+  };
+
+  // Wire all registered features
+  featureKeys.forEach(wireFeature);
+
+  // Subscribe to video settings changes (notify only)
+  const videoSettingKeys = ['autoNext', 'playbackRate'] as const;
+  videoSettingKeys.forEach((k) =>
+    videoSettingsStore.subscribe(
+      k,
+      ({ value }) => {
+        notificationManager.settingChanged(k, value);
+      },
+      false
+    )
+  );
+};
+
+setupReactiveFeatures();
+
 // /bulletin-list
 if (/^\/bulletin-list\/?$/.test(pathname)) {
   fixSomeBulletinListStyle();
@@ -31,13 +93,16 @@ else if (viewing && learningID) {
   tryPlayVideo();
 }
 
-// TODO add from settings
-fixSomeStyle();
-removeFooter();
-blockEventsSetup();
-enableUserSelectStyle();
+// Initialize all components
+try {
+  initSettingsMenu();
+} catch (error) {
+  console.error('Initialization error:', error);
+}
 
 // window.addEventListener('hashchange', () => main());
 
 // keep the session alive
 setInterval(() => document.dispatchEvent(new Event('mousemove')), 5e3);
+
+export { features, notificationManager };

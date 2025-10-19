@@ -193,7 +193,6 @@ export const addHref = async (
   className: string | string[]
 ) => {
   const el = await waitForElement(querySelector).catch(() => null);
-
   if (el) {
     const hrefEl = createElement('a', 'mk-custom-link', className);
     hrefEl.setAttribute('ng-href', href);

@@ -1,25 +1,35 @@
 import { BaseStore } from './base';
 
-export const DEFAULT_SETTINGS: VideoSettingsValues = Object.freeze({
+export const DEFAULT_SETTINGS: SettingsValues = Object.freeze({
   theme: 'light',
+  // Feature toggles
+  removeFooter: true,
+  blockEvents: true,
+  enableUserSelect: true,
+  fixStyle: true,
+  allowDownload: true,
+  // Floating ball settings
+  fabPeekEnabled: true,
 });
 
-export class VideoSettingsStore extends BaseStore<VideoSettingsValues> {
-  constructor(initialSettings?: Partial<VideoSettingsValues>) {
+export class SettingsStore extends BaseStore<SettingsValues> {
+  constructor(initialSettings?: Partial<SettingsValues>) {
     super('setting', { ...DEFAULT_SETTINGS, ...initialSettings });
   }
 
-  toggleTheme() {
-    const current = this.get('theme');
-    this.set('theme', current === 'light' ? 'dark' : 'light');
-  }
-
-  protected getDefault(): VideoSettingsValues {
+  protected getDefault(): SettingsValues {
     return DEFAULT_SETTINGS;
   }
 }
 
-export const settingsStore = new VideoSettingsStore();
+export const settingsStore = new SettingsStore();
 export default settingsStore;
 
-type VideoSettingsValues = { theme: 'light' | 'dark' };
+type SettingsValues = {
+  removeFooter: boolean;
+  blockEvents: boolean;
+  enableUserSelect: boolean;
+  fixStyle: boolean;
+  allowDownload: boolean;
+  fabPeekEnabled: boolean;
+};

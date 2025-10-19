@@ -1,4 +1,5 @@
 import { SVG_CLOSE, SVG_INFO, SVG_SUCCESS, SVG_WARN } from '@/assets/svg';
+
 import { createElement, createStyle, createSvgFromString } from './dom';
 
 export const TOAST_ICONS = {
@@ -155,8 +156,8 @@ class ToastManager {
     if (!this.activeToasts.has(toast)) return;
 
     toast.replaceWith(toast);
-
     toast.classList.add('hidden');
+
     setTimeout(() => {
       this.activeToasts.delete(toast);
       toast.remove();

@@ -1,5 +1,6 @@
-import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from '@/constants';
 import { SVG_MENU } from '@/assets/svg';
+import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from '@/constants';
+
 import {
   createElement,
   createStyle,
@@ -9,7 +10,7 @@ import {
 } from '../dom';
 
 export const removeFooter = () => {
-  createStyle(`$css
+  const style = createStyle(`$css
     .main-content {
       padding-bottom: 0 !important;
     }
@@ -18,10 +19,20 @@ export const removeFooter = () => {
       display: none !important;
     }
   `);
+
+  return () => style.remove();
 };
 
 export const fixSomeStyle = () => {
-  const removeMark = (el: HTMLElement) => (el.style.background = '');
+  const cleanups: (() => void)[] = [];
+
+  const removeMark = (el: HTMLElement) => {
+    const originalBg = el.style.background;
+    el.style.background = '';
+
+    cleanups.push(() => (el.style.background = originalBg));
+  };
+
   waitForElement('#Symbol(water-mark)')
     .then(removeMark)
     .catch(() => {});
@@ -48,24 +59,28 @@ export const fixSomeStyle = () => {
 
       const bodyClassList = document.body.classList;
       const customLayoutClassList = customLayout.classList;
-      onClickOutside(layout, () => {
+      const removeOutsideClick = onClickOutside(layout, () => {
         bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
         customLayoutClassList.remove('mk-open-menu');
       });
-      window.addEventListener('resize', () => {
+
+      const resizeHandler = () => {
         if (window.innerWidth >= 920) {
           bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
           customLayoutClassList.remove('mk-open-menu');
         }
-      });
-      customDropMenu.addEventListener('click', () => {
+      };
+      window.addEventListener('resize', resizeHandler);
+
+      const clickHandler = () => {
         bodyClassList.toggle(
           MK_HIDDEN_SCROLL_CLASS,
           customLayoutClassList.toggle('mk-open-menu')
         );
-      });
+      };
+      customDropMenu.addEventListener('click', clickHandler);
 
-      createStyle(`$css
+      const customDropMenuStyles = createStyle(`$css
         .mk-component.custom-drop-menu {
           display: none;
         }
@@ -160,12 +175,21 @@ export const fixSomeStyle = () => {
           }
         }
       `);
+
+      cleanups.push(() => {
+        customDropMenuStyles.remove();
+        customLayout.remove();
+        customDropMenu.remove();
+        removeOutsideClick();
+        window.removeEventListener('resize', resizeHandler);
+        customDropMenu.removeEventListener('click', clickHandler);
+      });
     })
     .catch(() => {
       console.log('Failed to fix some styles');
     });
 
-  createStyle(`$css
+  const hideScrollStyle = createStyle(`$css
     /* --- ${MK_HIDDEN_SCROLL_CLASS} ~ mk-hide-scroll --- */
     body.mk-hide-scroll {
       overflow: hidden;
@@ -173,9 +197,10 @@ export const fixSomeStyle = () => {
       padding-right: 14px;
     }
   `);
+  cleanups.push(() => hideScrollStyle.remove());
 
   // /user/courses
-  createStyle(`$css
+  const mainContentDesignStyle = createStyle(`$css
     .main-content .with-loading.content-under-nav-1 {
       padding: 0 2rem;
     }
@@ -249,12 +274,20 @@ export const fixSomeStyle = () => {
       }
     }
   `);
+  cleanups.push(() => mainContentDesignStyle.remove());
+
+  return () => {
+    cleanups.forEach((cleanup) => cleanup());
+  };
 };
 
-export const enableUserSelectStyle = () =>
-  createStyle(`$css
+export const enableUserSelectStyle = () => {
+  const style = createStyle(`$css
     /* --- ${MK_CUSTOM_COMPONENT} ~ mk-component --- */
     *:not(.mk-component) {
       user-select: text !important;
     }
   `);
+
+  return () => style.remove();
+};

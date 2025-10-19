@@ -17,20 +17,10 @@ export class VideoSettingStore extends BaseStore<VideoSettingValues> {
     this.subscribe('autoNextThreshold', () => {
       this.set('customAutoNextThreshold', this.getRandomAutoNextThreshold());
     });
+
     this.subscribe('autoNextThresholdVariance', () => {
       this.set('customAutoNextThreshold', this.getRandomAutoNextThreshold());
     });
-  }
-
-  setPlaybackRate(rate: number) {
-    this.set('playbackRate', rate);
-  }
-
-  enableAutoNext() {
-    this.set('autoNext', true);
-  }
-  disableAutoNext() {
-    this.set('autoNext', false);
   }
 
   getRandomAutoNextThreshold(): number {
@@ -50,7 +40,7 @@ export class VideoSettingStore extends BaseStore<VideoSettingValues> {
 export const videoSettingsStore = new VideoSettingStore();
 export default videoSettingsStore;
 
-type VideoSettingValues = {
+export type VideoSettingValues = {
   autoNext: boolean;
   autoNextThreshold: number;
   autoNextThresholdVariance: number;

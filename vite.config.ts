@@ -1,9 +1,9 @@
-import { defineConfig } from 'vite';
-import * as lightningcss from 'lightningcss';
-import { minify as htmlMinify } from 'html-minifier';
-import path from 'path';
 import autoprefixer from 'autoprefixer';
+import { minify as htmlMinify } from 'html-minifier';
+import * as lightningcss from 'lightningcss';
+import path from 'path';
 import postcss from 'postcss';
+import { defineConfig } from 'vite';
 
 const userScriptHeader = `// ==UserScript==
 // @name         一些 TronClass 功能
@@ -71,7 +71,7 @@ export default defineConfig({
     {
       name: 'vite-plugin-userscript-header',
       enforce: 'post',
-      generateBundle(options, bundle) {
+      generateBundle(_options, bundle) {
         for (const fileName in bundle) {
           const chunk = bundle[fileName];
           if (chunk.type === 'chunk') {

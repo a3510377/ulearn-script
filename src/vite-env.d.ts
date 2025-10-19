@@ -4,8 +4,8 @@
 
 declare var angular: angular.IAngularStatic | undefined;
 
-declare global {
-  interface Function {
-    $inject?: readonly string[] | undefined;
-  }
-}
+// declare global {
+//   interface Function {
+//     $inject?: readonly string[] | undefined;
+//   }
+// }

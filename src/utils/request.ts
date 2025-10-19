@@ -4,15 +4,25 @@ class HttpRequestInterceptor {
 
   constructor(toast?: Toast) {
     this.toast = toast || {
-      show: (msg: string, opt?: unknown) =>
-        console.log('[toast]', msg, opt || ''),
+      show: (msg: string, opt?: unknown) => {
+        console.log('[toast]', msg, opt || '');
+      },
     };
     this.initXHR();
     this.initFetch();
   }
 
   public registerHook(urlMatcher: URLMatcher, transform: TransformFn) {
-    this.hooks.push({ urlMatcher, transform });
+    const hook = { urlMatcher, transform };
+    this.hooks.push(hook);
+
+    // Return unregister function
+    return () => {
+      const index = this.hooks.indexOf(hook);
+      if (index > -1) {
+        this.hooks.splice(index, 1);
+      }
+    };
   }
 
   private runHooks(url: string, text: string): string {
@@ -100,8 +110,9 @@ class HttpRequestInterceptor {
       const onReady = () => {
         try {
           const raw = xhr.responseText;
-          if (typeof raw === 'string' && raw.length > 0)
+          if (typeof raw === 'string' && raw.length > 0) {
             tryOverrideResponse(raw);
+          }
         } catch (e) {
           console.error('[XHRFetchHookManager] onReady error', e);
         }
