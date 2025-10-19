@@ -76,7 +76,7 @@ export const setupSettingsMenuStyle = () => {
   const settingsPanelStyle = createStyle(`$css
     .mk-settings-menu-panel {
       z-index: 99999;
-      position: absolute;
+      position: fixed;
       width: 30rem;
       top: 0;
       left: 0;
