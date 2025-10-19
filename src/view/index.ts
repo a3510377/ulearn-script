@@ -65,13 +65,11 @@ export const initSettingsMenu = () => {
         } else if (spaceOnRight >= panelWidth) {
           // Better fit on right (inside)
           right = viewportWidth - fabRect.right - gap;
-        } else {
+        } else if (spaceOnLeft > spaceOnRight) {
           // Neither side fits perfectly, use side with more space
-          if (spaceOnLeft > spaceOnRight) {
-            right = BOUNDARY_PADDING;
-          } else {
-            right = viewportWidth - fabRect.right - gap;
-          }
+          right = BOUNDARY_PADDING;
+        } else {
+          right = viewportWidth - fabRect.right - gap;
         }
       } else {
         right = rightPos;
