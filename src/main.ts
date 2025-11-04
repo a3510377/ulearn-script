@@ -21,13 +21,6 @@ import { tryPlayVideo, withDownload } from '#/course/video';
 const PATH_MATCH =
   /^\/course\/(?<learningID>\d+)(?<viewing>\/learning-activity(\/full-screen)?)?/;
 
-const { pathname } = location;
-const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
-
-// load persisted settings first
-settingsStore.load();
-videoSettingsStore.load();
-
 // Register all features with the feature manager
 const features = {
   removeFooter: featureManager.register('removeFooter', removeFooter),
@@ -40,68 +33,84 @@ const features = {
   allowDownload: featureManager.register('allowDownload', withDownload),
 } as const;
 
-// Setup reactive features that respond to settings changes
-const setupReactiveFeatures = () => {
-  // Explicit, type-safe list of feature toggle keys backed by settingsStore
-  const featureKeys = Object.keys(features) as (keyof typeof features)[];
+const main = async () => {
+  const { host, pathname } = location;
+  const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
-  // Helper to enable/disable a feature based on setting value, with notification
-  const wireFeature = (key: keyof typeof features) => {
-    const feature = features[key];
-    // Apply initial state
-    if (settingsStore.get(key)) feature.enable();
-    // React to changes
-    settingsStore.subscribe(
-      key,
-      ({ value }: { value: boolean }) => {
-        if (value) feature.enable();
-        else feature.disable();
+  // 跳過 TronClass 官方首頁
+  if (/(.+\.)tronclass\.com(\.tw)?/.test(host) && pathname === '/') {
+    return;
+  }
 
-        notificationManager.settingChanged(key, value);
-      },
-      false
+  // load persisted settings first
+  await settingsStore.load();
+  await videoSettingsStore.load();
+
+  // Setup reactive features that respond to settings changes
+  const setupReactiveFeatures = () => {
+    // Explicit, type-safe list of feature toggle keys backed by settingsStore
+    const featureKeys = Object.keys(features) as (keyof typeof features)[];
+
+    // Helper to enable/disable a feature based on setting value, with notification
+    const wireFeature = (key: keyof typeof features) => {
+      const feature = features[key];
+      // Apply initial state
+      if (settingsStore.get(key)) feature.enable();
+      // React to changes
+      settingsStore.subscribe(
+        key,
+        ({ value }: { value: boolean }) => {
+          if (value) feature.enable();
+          else feature.disable();
+
+          notificationManager.settingChanged(key, value);
+        },
+        false
+      );
+    };
+
+    // Wire all registered features
+    featureKeys.forEach(wireFeature);
+
+    // Subscribe to video settings changes (notify only)
+    const videoSettingKeys = ['autoNext', 'playbackRate'] as const;
+    videoSettingKeys.forEach((k) =>
+      videoSettingsStore.subscribe(
+        k,
+        ({ value }) => notificationManager.settingChanged(k, value),
+        false
+      )
     );
   };
 
-  // Wire all registered features
-  featureKeys.forEach(wireFeature);
+  setupReactiveFeatures();
 
-  // Subscribe to video settings changes (notify only)
-  const videoSettingKeys = ['autoNext', 'playbackRate'] as const;
-  videoSettingKeys.forEach((k) =>
-    videoSettingsStore.subscribe(
-      k,
-      ({ value }) => notificationManager.settingChanged(k, value),
-      false
-    )
-  );
+  // /bulletin-list
+  if (/^\/bulletin-list\/?$/.test(pathname)) {
+    fixSomeBulletinListStyle();
+    featBulletinListCourseLink();
+  } else if (/^\/user\/courses\/?$/.test(pathname)) {
+    featCoursesLink();
+    fixCoursesStyle();
+  }
+  // /course/xxx/learning-activity/full-screen
+  else if (viewing && learningID) {
+    tryPlayVideo();
+  }
+
+  // Initialize all components
+  try {
+    initSettingsMenu();
+  } catch (error) {
+    console.error('Initialization error:', error);
+  }
+
+  // window.addEventListener('hashchange', () => main());
+
+  // keep the session alive
+  setInterval(() => document.dispatchEvent(new Event('mousemove')), 5e3);
 };
 
-setupReactiveFeatures();
-
-// /bulletin-list
-if (/^\/bulletin-list\/?$/.test(pathname)) {
-  fixSomeBulletinListStyle();
-  featBulletinListCourseLink();
-} else if (/^\/user\/courses\/?$/.test(pathname)) {
-  featCoursesLink();
-  fixCoursesStyle();
-}
-// /course/xxx/learning-activity/full-screen
-else if (viewing && learningID) {
-  tryPlayVideo();
-}
-
-// Initialize all components
-try {
-  initSettingsMenu();
-} catch (error) {
-  console.error('Initialization error:', error);
-}
-
-// window.addEventListener('hashchange', () => main());
-
-// keep the session alive
-setInterval(() => document.dispatchEvent(new Event('mousemove')), 5e3);
+main();
 
 export { features, notificationManager };

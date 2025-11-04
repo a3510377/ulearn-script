@@ -33,7 +33,8 @@ export const fixSomeStyle = () => {
     cleanups.push(() => (el.style.background = originalBg));
   };
 
-  waitForElement('#Symbol(water-mark)')
+  // -> #Symbol(water-mark)
+  waitForElement('#Symbol\\28water-mark\\29')
     .then(removeMark)
     .catch(() => {});
 
@@ -189,15 +190,56 @@ export const fixSomeStyle = () => {
       console.log('Failed to fix some styles');
     });
 
+  const INIT_HIDE_SCROLL_CLASSNAME = 'mk-init-hide-scroll';
   const hideScrollStyle = createStyle(`$css
-    /* --- ${MK_HIDDEN_SCROLL_CLASS} ~ mk-hide-scroll --- */
-    body.mk-hide-scroll {
+    body.${MK_HIDDEN_SCROLL_CLASS}, body.${INIT_HIDE_SCROLL_CLASSNAME} {
       overflow: hidden;
       visibility: visible;
       padding-right: 14px;
     }
   `);
   cleanups.push(() => hideScrollStyle.remove());
+
+  // 初始化時就隱藏 scroll bar，避免跳動
+  const fixScrollStyleHandle = () => {
+    const toggleHideScroll = (hide: boolean) => {
+      // > ?. 避免在某些情況下 document.body 為 null 而出錯
+      document.body?.classList.toggle(INIT_HIDE_SCROLL_CLASSNAME, hide);
+    };
+    if (document.readyState !== 'complete') {
+      toggleHideScroll(true);
+      window.addEventListener('load', () => toggleHideScroll(false), {
+        once: true,
+      });
+    }
+  };
+  fixScrollStyleHandle();
+  document.addEventListener('DOMContentLoaded', fixScrollStyleHandle);
+  cleanups.push(() => {
+    document.body.classList.remove(INIT_HIDE_SCROLL_CLASSNAME);
+    document.removeEventListener('DOMContentLoaded', fixScrollStyleHandle);
+  });
+
+  // https://tronclass.com.tw/api/exams/xxx/distribute
+  // /course/(:id)?
+  const courseContentStyle = createStyle(`$css
+    .course-content .course-header {
+      flex-wrap: wrap;
+    }
+  `);
+  cleanups.push(() => courseContentStyle.remove());
+
+  // /exam/:id/subjects(#/take?instanceId=xxx)
+  const courseDescriptionStyle = createStyle(`$css
+    .exam-activity-container > .hd {
+      min-width: unset !important;
+    }
+
+    .exam-area .row {
+      padding: 0 2rem;
+    }
+  `);
+  cleanups.push(() => courseDescriptionStyle.remove());
 
   // /user/courses
   const mainContentDesignStyle = createStyle(`$css

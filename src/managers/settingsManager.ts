@@ -45,14 +45,14 @@ class SettingsManager {
     }
   }
 
-  importSettings(data: ExportData, silent = false) {
+  async importSettings(data: ExportData, silent = false) {
     try {
       if (!data.version || !data.settings || !data.videoSettings) {
         throw new Error('Invalid settings data');
       }
 
-      settingsStore.setBatch(data.settings);
-      videoSettingsStore.setBatch(data.videoSettings);
+      await settingsStore.setAll(data.settings);
+      await videoSettingsStore.setAll(data.videoSettings);
 
       if (!silent) {
         notificationManager.success('設定已匯入');
@@ -75,7 +75,7 @@ class SettingsManager {
 
         const text = await file.text();
 
-        this.importSettings(JSON.parse(text));
+        await this.importSettings(JSON.parse(text));
       } catch (error) {
         notificationManager.error('匯入失敗：檔案格式不正確', error as Error);
       }
@@ -84,13 +84,13 @@ class SettingsManager {
     input.click();
   }
 
-  resetAll() {
+  async resetAll() {
     if (!confirm('確定要重置所有設定為預設值嗎？此操作無法復原。')) {
       return;
     }
 
-    settingsStore.reset();
-    videoSettingsStore.reset();
+    await settingsStore.reset();
+    await videoSettingsStore.reset();
     notificationManager.success('所有設定已重置');
   }
 }

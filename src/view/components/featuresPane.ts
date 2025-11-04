@@ -1,39 +1,8 @@
-import { settingsManager } from '@/managers';
 import settingsStore from '@/store/settings';
 
 import { buildRow, buildToggle } from './formElements';
 
 import { createElement } from '#/dom';
-
-export const buildManagementBar = () => {
-  const wrap = createElement('div', 'mk-settings-manage');
-
-  const btnExport = createElement('button', 'mk-btn');
-  btnExport.textContent = '匯出';
-  btnExport.title = '匯出設定為檔案 (Ctrl+Shift+E)';
-  btnExport.addEventListener('click', () => {
-    settingsManager.downloadSettings();
-  });
-
-  const btnImport = createElement('button', 'mk-btn');
-  btnImport.textContent = '匯入';
-  btnImport.title = '從檔案匯入設定';
-  btnImport.addEventListener('click', () => {
-    settingsManager.importFromFile();
-  });
-
-  const btnReset = createElement('button', 'mk-btn');
-  btnReset.textContent = '重置';
-  btnReset.title = '重置所有設定 (Ctrl+Shift+R)';
-  btnReset.addEventListener('click', () => {
-    if (confirm('確定要重置所有設定嗎？')) {
-      settingsManager.resetAll();
-    }
-  });
-
-  wrap.append(btnExport, btnImport, btnReset);
-  return wrap;
-};
 
 export const buildFeaturesPane = () => {
   const pane = createElement('div');

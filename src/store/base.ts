@@ -17,14 +17,18 @@ export abstract class BaseStore<T extends BaseStoreType> {
     return Object.freeze({ ...this._state });
   }
 
-  set<K extends keyof T>(key: K, value: T[K]): this {
+  async set<K extends keyof T>(
+    key: K,
+    value: T[K],
+    skipSave?: boolean
+  ): Promise<this> {
     const oldValue = this._state[key];
     if (oldValue !== value) {
       this._state[key] = value;
       this.notify(key, oldValue);
     }
 
-    this.save();
+    if (!skipSave) await this.save();
 
     return this;
   }
@@ -48,38 +52,37 @@ export abstract class BaseStore<T extends BaseStoreType> {
     this._listeners[key] = this._listeners[key]?.filter((l) => l !== fn);
   }
 
-  setBatch(settings: Partial<T>): this {
-    (Object.keys(settings) as (keyof T)[]).forEach((key) => {
-      this.set(key, settings[key]!);
-    });
+  async setAll(settings: Partial<T>, skipSave?: boolean): Promise<this> {
+    this._state = { ...this._state, ...settings };
+    if (!skipSave) await this.save();
     return this;
   }
 
-  reset(key?: keyof T) {
+  async reset(key?: keyof T) {
     const defaultValue = this.getDefault();
 
-    if (key) this.set(key, defaultValue[key]);
-    else this.setBatch({ ...defaultValue });
+    if (key) await this.set(key, defaultValue[key]);
+    else await this.setAll(defaultValue);
   }
 
   protected abstract getDefault(): T;
 
-  save() {
+  async save() {
     const stateToSave = { ...this._state };
     for (const key of this._storeExclude) {
       delete stateToSave[key];
     }
-    GM_setValue(this._id, stateToSave);
+    await GM.setValue(this._id, stateToSave);
   }
 
-  load() {
-    const savedState = GM_getValue(this._id, {});
+  async load() {
+    const savedState = await GM.getValue<Partial<T>>(this._id, {});
 
     for (const key of this._storeExclude) {
-      delete (savedState as Partial<T>)[key];
+      delete savedState[key];
     }
 
-    this.setBatch(savedState);
+    await this.setAll(savedState, true);
   }
 
   private notify<K extends keyof T>(key: K, oldValue: T[K]) {

@@ -10,17 +10,25 @@ export const DEFAULT_SETTINGS: VideoSettingValues = Object.freeze({
 
 export class VideoSettingStore extends BaseStore<VideoSettingValues> {
   constructor(initialSettings?: Partial<VideoSettingValues>) {
-    super('settings', { ...DEFAULT_SETTINGS, ...initialSettings }, [
+    super('video_settings', { ...DEFAULT_SETTINGS, ...initialSettings }, [
       'customAutoNextThreshold',
     ]);
 
-    this.subscribe('autoNextThreshold', () => {
-      this.set('customAutoNextThreshold', this.getRandomAutoNextThreshold());
-    });
+    this.subscribe(
+      'autoNextThreshold',
+      () => {
+        this.set('customAutoNextThreshold', this.getRandomAutoNextThreshold());
+      },
+      false
+    );
 
-    this.subscribe('autoNextThresholdVariance', () => {
-      this.set('customAutoNextThreshold', this.getRandomAutoNextThreshold());
-    });
+    this.subscribe(
+      'autoNextThresholdVariance',
+      () => {
+        this.set('customAutoNextThreshold', this.getRandomAutoNextThreshold());
+      },
+      false
+    );
   }
 
   getRandomAutoNextThreshold(): number {

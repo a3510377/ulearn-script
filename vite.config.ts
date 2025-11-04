@@ -12,9 +12,11 @@ const userScriptHeader = `// ==UserScript==
 // @description  移除頁腳、修復部份樣式、繞過下載限制、繞過快轉限制、繞過複製限制、繞過畫面切換檢測、繞過全螢幕檢測等等，開發時使用 NFU ULearn，其它學校可能不適用
 // @license      MIT
 // @author       MonkeyCat
+// @match        https://tronclass.com.tw/*
 // @match        https://ulearn.nfu.edu.tw/*
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_listValues
 // @run-at       document-start
 // ==/UserScript==`;
 
@@ -38,6 +40,22 @@ export default defineConfig({
                   removeComments: true,
                 });
               } else if (prefix === 'css') {
+                const variableMap = new Map<string, string>();
+
+                content = content.replace(
+                  /\${\s*([^}]*)\s*}/g,
+                  (_: unknown, p1: string) => {
+                    if (!p1) return '';
+                    if (!variableMap.has(p1)) {
+                      variableMap.set(
+                        p1,
+                        '__tmp_class_' + Math.random().toString(36).slice(2)
+                      );
+                    }
+                    return variableMap.get(p1)!;
+                  }
+                );
+
                 const cssString = lightningcss
                   .transform({
                     filename: '',
@@ -55,6 +73,13 @@ export default defineConfig({
                     ],
                   }),
                 ]).process(cssString).css;
+
+                for (const [key, tmp] of variableMap.entries()) {
+                  minified = minified.replace(
+                    new RegExp(tmp, 'g'),
+                    `\${${key}}`
+                  );
+                }
               } else return match;
 
               // FIXME safe for backticks in content

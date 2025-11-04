@@ -49,9 +49,9 @@ export const buildManagePane = () => {
         const btn = createElement('button', 'mk-btn');
 
         btn.textContent = '重置';
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           if (confirm('確定要重置所有設定嗎？')) {
-            settingsManager.resetAll();
+            await settingsManager.resetAll();
           }
         });
 
