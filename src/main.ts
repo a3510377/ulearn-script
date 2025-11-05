@@ -1,3 +1,4 @@
+import { featureManager as featureManagerBase } from '@/feature';
 import { featureManager, notificationManager } from '@/managers';
 import settingsStore from '@/store/settings';
 import videoSettingsStore from '@/store/videoSettings';
@@ -8,11 +9,6 @@ import {
 } from './utils/bulletin-list';
 import { featCoursesLink, fixCoursesStyle } from './utils/course/courses';
 import { blockEventsSetup } from './utils/events';
-import {
-  enableUserSelectStyle,
-  fixSomeStyle,
-  removeFooter,
-} from './utils/other/global';
 import { initSettingsMenu } from './view/index';
 
 import './style';
@@ -23,13 +19,7 @@ const PATH_MATCH =
 
 // Register all features with the feature manager
 const features = {
-  removeFooter: featureManager.register('removeFooter', removeFooter),
   blockEvents: featureManager.register('blockEvents', blockEventsSetup),
-  enableUserSelect: featureManager.register(
-    'enableUserSelect',
-    enableUserSelectStyle
-  ),
-  fixStyle: featureManager.register('fixStyle', fixSomeStyle),
   allowDownload: featureManager.register('allowDownload', withDownload),
 } as const;
 
@@ -38,9 +28,12 @@ const main = async () => {
   const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
   // 跳過 TronClass 官方首頁
-  if (/(.+\.)tronclass\.com(\.tw)?/.test(host) && pathname === '/') {
+  if (/(.+\.)?tronclass\.com(\.tw)?/.test(host) && pathname === '/') {
     return;
   }
+
+  // TODO register all feature
+  featureManagerBase;
 
   // load persisted settings first
   await settingsStore.load();

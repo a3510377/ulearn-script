@@ -11,15 +11,17 @@ export class FeatureModule<T extends BaseStateType> extends BaseState<
 
 export class GroupFeature<T extends BaseStateType> {
   protected module: FeatureModule<T>;
-  protected features: Map<string, Feature<T>>;
+  protected features: Map<string, Feature<T>[]>;
 
   constructor(module: FeatureModule<T>) {
     this.module = module;
     this.features = new Map();
   }
 
-  register(name: string, feature: Feature<T>) {
-    this.features.set(name, feature);
+  register(name: string, features: Feature<T>): void;
+  register(name: string, features: Feature<T>[]): void;
+  register(name: string, features: Feature<T> | Feature<T>[]) {
+    this.features.set(name, Array.isArray(features) ? features : [features]);
   }
 }
 
@@ -48,7 +50,7 @@ export type FeatureContext<T extends BaseStateType> = {
 
 export type CleanupFn<T extends BaseStateType> = (
   ctx: FeatureContext<T>
-) => MaybePromise<void>;
+) => MaybePromise<any>;
 export type CleanupResult<T extends BaseStateType> =
   | CleanupFn<T>
   | CleanupFn<T>[]
@@ -64,7 +66,9 @@ export type Feature<T extends BaseStateType = BaseStateType> = {
   id: string;
   test: (() => MaybePromise<boolean | RegExp>) | RegExp;
   setup?: CallbackWithCleanupFn<T>;
+  liveReload?: boolean; // default: true
 } & (
+  | { setup: CallbackWithCleanupFn<T> }
   | {
       toggle: (
         enabled: boolean,
@@ -73,3 +77,6 @@ export type Feature<T extends BaseStateType = BaseStateType> = {
     }
   | { enable: CallbackWithCleanupFn<T>; disable?: CallbackWithCleanupFn<T> }
 );
+
+import './exam';
+import './global';

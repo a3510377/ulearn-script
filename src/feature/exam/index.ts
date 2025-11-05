@@ -1,0 +1,9 @@
+import { featureManager, FeatureModule, GroupFeature } from '..';
+
+export const defaultConfig = {};
+export const examFeatureModule = new FeatureModule(defaultConfig);
+export const examFeatures = new GroupFeature(examFeatureModule);
+
+import './mark';
+
+featureManager.register('exam', examFeatureModule);
