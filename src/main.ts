@@ -3,29 +3,18 @@ import { featureManager, notificationManager } from '@/managers';
 import settingsStore from '@/store/settings';
 import videoSettingsStore from '@/store/videoSettings';
 
-import {
-  featBulletinListCourseLink,
-  fixSomeBulletinListStyle,
-} from './utils/bulletin-list';
-import { featCoursesLink, fixCoursesStyle } from './utils/course/courses';
 import { blockEventsSetup } from './utils/events';
 import { initSettingsMenu } from './view/index';
 
 import './style';
-import { tryPlayVideo, withDownload } from '#/course/video';
-
-const PATH_MATCH =
-  /^\/course\/(?<learningID>\d+)(?<viewing>\/learning-activity(\/full-screen)?)?/;
 
 // Register all features with the feature manager
 const features = {
   blockEvents: featureManager.register('blockEvents', blockEventsSetup),
-  allowDownload: featureManager.register('allowDownload', withDownload),
 } as const;
 
 const main = async () => {
   const { host, pathname } = location;
-  const { learningID, viewing } = pathname.match(PATH_MATCH)?.groups || {};
 
   // 跳過 TronClass 官方首頁
   if (/(.+\.)?tronclass\.com(\.tw)?/.test(host) && pathname === '/') {
@@ -77,19 +66,6 @@ const main = async () => {
   };
 
   setupReactiveFeatures();
-
-  // /bulletin-list
-  if (/^\/bulletin-list\/?$/.test(pathname)) {
-    fixSomeBulletinListStyle();
-    featBulletinListCourseLink();
-  } else if (/^\/user\/courses\/?$/.test(pathname)) {
-    featCoursesLink();
-    fixCoursesStyle();
-  }
-  // /course/xxx/learning-activity/full-screen
-  else if (viewing && learningID) {
-    tryPlayVideo();
-  }
 
   // Initialize all components
   try {
