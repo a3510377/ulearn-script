@@ -1,4 +1,4 @@
-import { useToast } from '#/toast';
+import { useToast } from './toast';
 
 class NotificationManager {
   private toast = useToast();

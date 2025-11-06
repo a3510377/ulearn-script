@@ -4,6 +4,8 @@ import { globalFeatures } from '.';
 
 globalFeatures.register('style', {
   id: 'init-hide-scroll',
+  name: '加載時隱藏滾動條',
+  description: '在頁面加載期間隱藏滾動條以防止佈局抖動',
   test: () => true,
   enable: async () => {
     const INIT_HIDE_SCROLL_CLASSNAME = `${MK_HIDDEN_SCROLL_CLASS}-init`;

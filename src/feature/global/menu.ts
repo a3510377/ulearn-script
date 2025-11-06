@@ -12,6 +12,7 @@ import { globalFeatures } from '.';
 
 globalFeatures.register('menu', {
   id: 'RWD-support',
+  name: '響應式選單',
   test: () => true,
   // 由於強制更改 DOM 結構，若支援 liveReload 會有點麻煩，懶惰 :>
   liveReload: false,

@@ -64,6 +64,8 @@ export type CallbackWithCleanupFn<T extends BaseStateType> = (
 
 export type Feature<T extends BaseStateType = BaseStateType> = {
   id: string;
+  name: string;
+  description?: string;
   test: (() => MaybePromise<boolean | RegExp>) | RegExp;
   setup?: CallbackWithCleanupFn<T>;
   liveReload?: boolean; // default: true

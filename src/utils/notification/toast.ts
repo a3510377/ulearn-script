@@ -1,6 +1,6 @@
 import { SVG_CLOSE, SVG_INFO, SVG_SUCCESS, SVG_WARN } from '@/assets/svg';
 
-import { createElement, createStyle, createSvgFromString } from './dom';
+import { createElement, createStyle, createSvgFromString } from '../dom';
 
 export const TOAST_ICONS = {
   warn: SVG_WARN,

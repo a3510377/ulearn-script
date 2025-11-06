@@ -4,6 +4,8 @@ import { globalFeatures } from '.';
 
 globalFeatures.register('footer', {
   id: 'hidden',
+  name: '隱藏頁腳',
+  description: '隱藏頁面底部的預設頁腳',
   test: () => true,
   enable: async () => {
     const style = createStyle(`$css

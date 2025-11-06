@@ -8,6 +8,8 @@ const cleanups: CleanupFn<typeof defaultConfig>[] = [];
 
 examFeatures.register('mark', {
   id: 'examMark',
+  name: '移除考試浮水印',
+  description: '移除考試頁面上的浮水印',
   test: () => true,
   enable: async () => {
     const removeMark = (el: HTMLElement) => {

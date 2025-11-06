@@ -1,7 +1,3 @@
-import { buildFeaturesPane } from './components/featuresPane';
-import { buildManagePane } from './components/managePane';
-import { buildVideoPane } from './components/videoPane';
-
 import { createElement } from '#/dom';
 
 export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
@@ -33,11 +29,6 @@ export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
 
   // Content container
   const content = createElement('div', 'mk-settings-content');
-
-  // Build tab panes
-  tabContents['features'] = buildFeaturesPane();
-  tabContents['video'] = buildVideoPane();
-  tabContents['manage'] = buildManagePane();
 
   Object.entries(tabContents).forEach(([id, pane], index) => {
     pane.classList.add('mk-settings-tab-pane');
