@@ -1,3 +1,5 @@
+import { featureManager } from '@/feature';
+
 import { createElement } from '#/dom';
 
 export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
@@ -8,18 +10,19 @@ export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
 
   // Tabs
   const tabs = createElement('div', 'mk-settings-tabs');
-  const tabButtons = [
-    { id: 'features', label: '功能開關', icon: '⚙️' },
-    { id: 'video', label: '影片設定', icon: '🎬' },
-    // { id: 'interface', label: '介面設定', icon: '🎨' },
-    { id: 'manage', label: '管理', icon: '🛠️' },
-  ];
+  const tabButtons: { id: string; label: string }[] = [];
+
+  for (const [name, _feature] of featureManager.get()) {
+    const tabContent = createElement('div', 'mk-settings-tab-content');
+    tabContent.textContent = `Settings for ${name}`;
+    tabButtons.push({ id: name, label: name });
+  }
 
   const tabContents: Record<string, HTMLElement> = {};
 
-  tabButtons.forEach(({ id, label, icon }, index) => {
+  tabButtons.forEach(({ id, label }, index) => {
     const btn = createElement('button', 'mk-settings-tab');
-    btn.textContent = `${icon} ${label}`;
+    btn.textContent = `${label}`;
     btn.dataset.tab = id;
     if (index === 0) btn.classList.add('active');
     tabs.appendChild(btn);

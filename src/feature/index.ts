@@ -1,9 +1,9 @@
+import type { DEFAULT_LANGUAGE_CODE, LanguageCode } from '@/utils/global';
 import { type BaseStateType, PersistentState } from '@/utils/state';
-import type {
-  DefaultLanguageCode,
-  LanguageCode,
-  MaybePromise,
-} from '@/utils/type';
+import type { MaybePromise } from '@/utils/type';
+
+import { registerExamModule } from './exam';
+import { registerGlobalModule } from './global';
 
 export class FeatureModule<
   T extends BaseStateType,
@@ -61,8 +61,12 @@ export class FeatureManager {
     this.features.set(name, feature);
   }
 
-  get<T extends BaseStateType>(name: string): FeatureModule<T> | undefined {
-    return this.features.get(name);
+  get<T extends BaseStateType>(): Map<string, FeatureModule<T>>;
+  get<T extends BaseStateType>(name: string): FeatureModule<T> | undefined;
+  get<T extends BaseStateType>(
+    name?: string
+  ): FeatureModule<T> | Map<string, FeatureModule<T>> | undefined {
+    return name ? this.features.get(name) : this.features;
   }
 }
 
@@ -79,10 +83,19 @@ export type BaseStateToString<T> = {
     : { name: string; description?: string } | string;
 };
 
+export type FeatureModuleMessageFull<T extends BaseStateType> = {
+  module: { name: string; description?: string };
+} & BaseStateToString<T>;
+
 export type FeatureModuleI18N<T extends BaseStateType> = {
-  [K in DefaultLanguageCode]: BaseStateToString<T>;
+  // Default language is required
+  [K in typeof DEFAULT_LANGUAGE_CODE]: FeatureModuleMessageFull<T>;
 } & {
-  [K in Exclude<LanguageCode, DefaultLanguageCode>]?: BaseStateToString<T>;
+  // Other languages are optional
+  [K in Exclude<
+    LanguageCode,
+    typeof DEFAULT_LANGUAGE_CODE
+  >]?: FeatureModuleMessageFull<T>;
 };
 
 export type CleanupFn<T extends BaseStateType> = (
@@ -101,8 +114,6 @@ export type CallbackWithCleanupFn<T extends BaseStateType> = (
 
 export type Feature<T extends Record<PropertyKey, any>> = {
   id: keyof T;
-  name: string;
-  description?: string;
   test: (() => MaybePromise<boolean | RegExp>) | RegExp;
   setup?: CallbackWithCleanupFn<T>;
   liveReload?: boolean; // default: true
@@ -121,5 +132,5 @@ export type Feature<T extends Record<PropertyKey, any>> = {
   | { click?: (ctx: FeatureContext<T>) => void }
 );
 
-import './exam';
-import './global';
+registerExamModule(featureManager);
+registerGlobalModule(featureManager);

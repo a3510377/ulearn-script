@@ -113,7 +113,7 @@ export const setupSettingsMenuStyle = () => {
     .mk-settings-menu-panel .mk-settings-tabs {
       display: flex;
       justify-content: space-between;
-      gap: 0.5rem;
+      gap: 1.5rem;
       padding: 0 0.5rem;
       margin-bottom: 1rem;
     }
@@ -140,7 +140,6 @@ export const setupSettingsMenuStyle = () => {
     .mk-settings-menu-panel .mk-settings-tab.active {
       color: #fff;
       background-color: #4a90e2;
-      transform: scale(1.05);
       box-shadow: inset 0 0 0 1px #00000026;
     }
 

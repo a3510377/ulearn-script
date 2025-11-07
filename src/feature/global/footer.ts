@@ -1,14 +1,13 @@
 import { createStyle } from '@/utils/dom';
 
-import { globalFeatures } from '.';
+import type { GlobalFeatures } from '.';
 
-globalFeatures.register('footer', {
-  id: 'hidden',
-  name: '隱藏頁腳',
-  description: '隱藏頁面底部的預設頁腳',
-  test: () => true,
-  enable: async () => {
-    const style = createStyle(`$css
+export const registerFooterFeature = (group: GlobalFeatures) => {
+  group.register('footer', {
+    id: 'hidden',
+    test: () => true,
+    enable: async () => {
+      const style = createStyle(`$css
       .main-content {
         padding-bottom: 0 !important;
       }
@@ -18,6 +17,7 @@ globalFeatures.register('footer', {
       }
     `);
 
-    return () => style.remove();
-  },
-});
+      return () => style.remove();
+    },
+  });
+};

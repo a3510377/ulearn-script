@@ -1,11 +1,37 @@
 {
   "zh-TW": {
-    "style": { "init-hide-scroll": "加載時隱藏滾動條" },
-    "menu": { "RWD-support": "響應式選單" },
-    "footer": { "hidden": "隱藏頁腳" },
+    "module": { "name": "通用功能" },
+    "style": {
+      "init-hide-scroll": {
+        "name": "初始化隱藏滾動條",
+        "description": "在頁面載入時隱藏滾動條，直到使用者開始滾動"
+      }
+    },
+    "menu": {
+      "RWD-support": {
+        "name": "啟用響應式設計支援",
+        "description": "使網站在不同螢幕尺寸下具有更好的顯示效果"
+      }
+    },
+    "footer": {
+      "hidden": {
+        "name": "隱藏頁腳",
+        "description": "這頁腳有點醜..."
+      }
+    },
     "event-hook": {
-      "copy": "允許文字選取與複製",
-      "disable-devtool-detect": "允許使用開發者工具 (開發者工具在考試模式時可能被禁用)"
+      "copy": {
+        "name": "允許文字選取與複製",
+        "description": "允許用戶選取和複製頁面上的文字"
+      },
+      "disable-devtool-detect": {
+        "name": "允許使用開發者工具",
+        "description": "允許使用開發者工具 (開發者工具在考試模式時可能被禁用)"
+      },
+      "keep-session-alive": {
+        "name": "保持登入狀態",
+        "description": "防止自動登出以保持會話活躍"
+      }
     }
   }
 }

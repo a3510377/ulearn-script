@@ -1,5 +1,3 @@
-import { featureManager as featureManagerBase } from '@/feature';
-
 import { initSettingsMenu } from './view/index';
 
 import './style';
@@ -12,9 +10,6 @@ const main = async () => {
     return;
   }
 
-  // TODO register all feature
-  featureManagerBase;
-
   // Initialize all components
   try {
     initSettingsMenu();
@@ -23,9 +18,6 @@ const main = async () => {
   }
 
   // window.addEventListener('hashchange', () => main());
-
-  // keep the session alive
-  setInterval(() => document.dispatchEvent(new Event('mousemove')), 5e3);
 };
 
 main();

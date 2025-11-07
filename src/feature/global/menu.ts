@@ -8,53 +8,53 @@ import {
   waitForElement,
 } from '@/utils/dom';
 
-import { globalFeatures } from '.';
+import type { GlobalFeatures } from '.';
 
-globalFeatures.register('menu', {
-  id: 'RWD-support',
-  name: '響應式選單',
-  test: () => true,
-  // 由於強制更改 DOM 結構，若支援 liveReload 會有點麻煩，懶惰 :>
-  liveReload: false,
-  enable: async () => {
-    // header and menu
-    waitForElement('.layout-row.default-layout').then((layout) => {
-      const customLayout = createElement('div', 'custom-layout');
-      const customDropMenu = createElement('div', 'custom-drop-menu');
+export const registerMenuFeature = (group: GlobalFeatures) => {
+  group.register('menu', {
+    id: 'RWD-support',
+    test: () => true,
+    // 由於強制更改 DOM 結構，若支援 liveReload 會有點麻煩，懶惰 :>
+    liveReload: false,
+    enable: async () => {
+      // header and menu
+      waitForElement('.layout-row.default-layout').then((layout) => {
+        const customLayout = createElement('div', 'custom-layout');
+        const customDropMenu = createElement('div', 'custom-drop-menu');
 
-      customLayout.append(
-        ...document.querySelectorAll(
-          '.layout-row.default-layout>li,.layout-row.default-layout>ul'
-        )
-      );
-      customDropMenu.append(createSvgFromString(SVG_MENU));
+        customLayout.append(
+          ...document.querySelectorAll(
+            '.layout-row.default-layout>li,.layout-row.default-layout>ul'
+          )
+        );
+        customDropMenu.append(createSvgFromString(SVG_MENU));
 
-      layout.append(customLayout, customDropMenu);
+        layout.append(customLayout, customDropMenu);
 
-      const bodyClassList = document.body.classList;
-      const customLayoutClassList = customLayout.classList;
-      onClickOutside(layout, () => {
-        bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
-        customLayoutClassList.remove('mk-open-menu');
-      });
-
-      const resizeHandler = () => {
-        if (window.innerWidth >= 920) {
+        const bodyClassList = document.body.classList;
+        const customLayoutClassList = customLayout.classList;
+        onClickOutside(layout, () => {
           bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
           customLayoutClassList.remove('mk-open-menu');
-        }
-      };
-      window.addEventListener('resize', resizeHandler);
+        });
 
-      const clickHandler = () => {
-        bodyClassList.toggle(
-          MK_HIDDEN_SCROLL_CLASS,
-          customLayoutClassList.toggle('mk-open-menu')
-        );
-      };
-      customDropMenu.addEventListener('click', clickHandler);
+        const resizeHandler = () => {
+          if (window.innerWidth >= 920) {
+            bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
+            customLayoutClassList.remove('mk-open-menu');
+          }
+        };
+        window.addEventListener('resize', resizeHandler);
 
-      createStyle(`$css
+        const clickHandler = () => {
+          bodyClassList.toggle(
+            MK_HIDDEN_SCROLL_CLASS,
+            customLayoutClassList.toggle('mk-open-menu')
+          );
+        };
+        customDropMenu.addEventListener('click', clickHandler);
+
+        createStyle(`$css
         .${MK_CUSTOM_COMPONENT}.custom-drop-menu {
           display: none;
         }
@@ -149,6 +149,7 @@ globalFeatures.register('menu', {
           }
         }
       `);
-    });
-  },
-});
+      });
+    },
+  });
+};

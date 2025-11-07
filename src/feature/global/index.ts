@@ -1,31 +1,46 @@
 import i18n from './_i18n.json';
+import { registerEventHookFeature } from './event-hook';
+import { registerFooterFeature } from './footer';
+import { registerMenuFeature } from './menu';
+import { registerStyleFeature } from './style';
 
-import { featureManager, FeatureModule, GroupFeature } from '..';
+import type { FeatureManager } from '..';
+import { FeatureModule, GroupFeature } from '..';
 
-export const globalFeatureModule = new FeatureModule(
-  'global',
-  {
-    style: {
-      'init-hide-scroll': true,
-    },
-    menu: {
-      'RWD-support': true,
-    },
-    footer: {
-      hidden: true,
-    },
-    'event-hook': {
-      copy: true,
-      'disable-devtool-detect': true,
-    },
+export const defaultConfig = {
+  style: {
+    'init-hide-scroll': true,
   },
-  i18n
-);
+  menu: {
+    'RWD-support': true,
+  },
+  footer: {
+    hidden: true,
+  },
+  'event-hook': {
+    copy: true,
+    'disable-devtool-detect': true,
+    'keep-session-alive': true,
+  },
+};
 
-export const globalFeatures = new GroupFeature(globalFeatureModule);
+export const registerGlobalModule = (moduleManager: FeatureManager) => {
+  const globalFeatureModule = new FeatureModule('global', defaultConfig, i18n);
+  const globalFeatures = new GroupFeature(globalFeatureModule);
 
-import './footer';
-import './menu';
-import './style';
+  registerEventHookFeature(globalFeatures);
+  registerFooterFeature(globalFeatures);
+  registerMenuFeature(globalFeatures);
+  registerStyleFeature(globalFeatures);
 
-featureManager.register('global', globalFeatureModule);
+  moduleManager.register('global', globalFeatureModule);
+
+  return { globalFeatures, globalFeatureModule };
+};
+
+export type GlobalFeatures = ReturnType<
+  typeof registerGlobalModule
+>['globalFeatures'];
+export type GlobalFeatureModule = ReturnType<
+  typeof registerGlobalModule
+>['globalFeatureModule'];
