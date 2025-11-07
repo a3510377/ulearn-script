@@ -157,10 +157,12 @@ export type ChangeListener<T, K extends keyof T = keyof T> = (
   oldValue: T[K]
 ) => void;
 
-export type BaseStateType<Value = string | number | boolean> = Record<
-  PropertyKey,
-  Value
->;
+type PrimitiveValue = string | number | boolean;
+type DepthMap = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+type NestedState<Depth extends number> = Depth extends 0
+  ? PrimitiveValue
+  : Record<PropertyKey, PrimitiveValue | NestedState<DepthMap[Depth]>>;
+export type BaseStateType = NestedState<3>;
 
 export interface PersistentStateOptions {
   storage: {

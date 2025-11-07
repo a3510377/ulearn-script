@@ -1,0 +1,11 @@
+{
+  "zh-TW": {
+    "style": { "init-hide-scroll": "加載時隱藏滾動條" },
+    "menu": { "RWD-support": "響應式選單" },
+    "footer": { "hidden": "隱藏頁腳" },
+    "event-hook": {
+      "copy": "允許文字選取與複製",
+      "disable-devtool-detect": "允許使用開發者工具 (開發者工具在考試模式時可能被禁用)"
+    }
+  }
+}

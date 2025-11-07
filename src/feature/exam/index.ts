@@ -1,6 +1,10 @@
 import { featureManager, FeatureModule, GroupFeature } from '..';
 
-export const defaultConfig = {};
+export const defaultConfig = {
+  mark: {
+    examMark: true,
+  },
+};
 export const examFeatureModule = new FeatureModule(defaultConfig);
 export const examFeatures = new GroupFeature(examFeatureModule);
 

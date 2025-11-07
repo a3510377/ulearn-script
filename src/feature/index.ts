@@ -1,27 +1,50 @@
 import { BaseState, type BaseStateType } from '@/utils/state';
-import type { MaybePromise } from '@/utils/type';
+import type {
+  DefaultLanguageCode,
+  LanguageCode,
+  MaybePromise,
+} from '@/utils/type';
 
-export class FeatureModule<T extends BaseStateType> extends BaseState<
-  { enabled: boolean } & T
-> {
-  constructor(defaultState: T) {
+export type BaseStateToString<T> = {
+  [K in keyof T]: T[K] extends Record<PropertyKey, any>
+    ? BaseStateToString<T[K]>
+    : { name: string; description?: string } | string;
+};
+
+export type FeatureModuleI18N<T extends BaseStateType> = {
+  [K in DefaultLanguageCode]: BaseStateToString<T>;
+} & {
+  [K in Exclude<LanguageCode, DefaultLanguageCode>]?: BaseStateToString<T>;
+};
+
+export class FeatureModule<
+  T extends BaseStateType,
+  I18N extends FeatureModuleI18N<T> = FeatureModuleI18N<T>
+> extends BaseState<{ enabled: boolean } & T> {
+  protected i18n?: Partial<I18N>;
+
+  constructor(defaultState: T, i18n?: Partial<I18N>) {
     super({ enabled: true, ...defaultState });
+    this.i18n = i18n;
   }
 }
 
-export class GroupFeature<T extends BaseStateType> {
-  protected module: FeatureModule<T>;
-  protected features: Map<string, Feature<T>[]>;
+export class GroupFeature<
+  T extends BaseStateType,
+  I18N extends FeatureModuleI18N<T> = FeatureModuleI18N<T>
+> {
+  protected module: FeatureModule<T, I18N>;
+  protected features: { [K in keyof T]?: Feature<NonNullable<T[K]>>[] } = {};
 
-  constructor(module: FeatureModule<T>) {
+  constructor(module: FeatureModule<T, I18N>) {
     this.module = module;
-    this.features = new Map();
   }
 
-  register(name: string, features: Feature<T>): void;
-  register(name: string, features: Feature<T>[]): void;
-  register(name: string, features: Feature<T> | Feature<T>[]) {
-    this.features.set(name, Array.isArray(features) ? features : [features]);
+  register<K extends keyof T>(
+    name: K,
+    ...features: Feature<NonNullable<T[K]>>[]
+  ) {
+    (this.features[name] ??= []).push(...features);
   }
 }
 
@@ -62,8 +85,8 @@ export type CallbackWithCleanupFn<T extends BaseStateType> = (
   ctx: FeatureContext<T>
 ) => CleanupResultAsync<T>;
 
-export type Feature<T extends BaseStateType = BaseStateType> = {
-  id: string;
+export type Feature<T extends Record<PropertyKey, any>> = {
+  id: keyof T;
   name: string;
   description?: string;
   test: (() => MaybePromise<boolean | RegExp>) | RegExp;

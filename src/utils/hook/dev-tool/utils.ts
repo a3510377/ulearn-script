@@ -16,7 +16,7 @@ export const native = Object.freeze({
  * @param obj 要處理的對象
  */
 export function bindAll<T extends object>(obj: T): T {
-  const result: any = {};
+  const result: T = {} as T;
   for (const key of native.Reflect.ownKeys(obj) as (keyof T)[]) {
     const value = obj[key];
     result[key] = typeof value === 'function' ? value.bind(obj) : value;
@@ -32,7 +32,7 @@ export const bound = Object.freeze({
   Reflect: bindAll(native.Reflect),
   performance: native.performance,
   setTimeout: native.setTimeout.bind(win),
-  Proxy: native.Proxy,
+  Proxy: bindAll(native.Proxy),
 });
 
 /**

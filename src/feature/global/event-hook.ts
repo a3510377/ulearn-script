@@ -6,7 +6,8 @@ import { globalFeatures } from '.';
 
 // TODO 添加 copy js hook hot reload support
 
-globalFeatures.register('event-hook', [
+globalFeatures.register(
+  'event-hook',
   {
     id: 'copy',
     name: '允許文字選取與複製',
@@ -14,10 +15,10 @@ globalFeatures.register('event-hook', [
     test: () => true,
     enable: async () => {
       const style = createStyle(`$css
-      *:not(.${MK_CUSTOM_COMPONENT}) {
-        user-select: text !important;
-      }
-    `);
+        *:not(.${MK_CUSTOM_COMPONENT}) {
+          user-select: text !important;
+        }
+      `);
 
       return () => style.remove();
     },
@@ -29,5 +30,5 @@ globalFeatures.register('event-hook', [
     test: () => true,
     liveReload: false,
     enable: () => disableDevToolDetector(),
-  },
-]);
+  }
+);

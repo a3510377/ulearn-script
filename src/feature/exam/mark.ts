@@ -28,5 +28,6 @@ examFeatures.register('mark', {
       .then(removeMark)
       .catch(() => {});
   },
-  disable: async (ctx) => cleanups.forEach((fn) => fn(ctx)),
+  // TODO remove any type
+  disable: async (ctx) => cleanups.forEach((fn) => fn(ctx as any)),
 });
