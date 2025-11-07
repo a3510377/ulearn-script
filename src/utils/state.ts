@@ -1,7 +1,75 @@
+type DeepSize = 3;
+
+export type ChangeListener<T, P extends Path<T> = Path<T>> = (
+  path: P,
+  value: PartialPathValue<T, P>,
+  oldValue: PartialPathValue<T, P>
+) => void;
+
+type PrimitiveValue = string | number | symbol | boolean;
+type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+export type NestedState<Depth extends number> = Depth extends 0
+  ? PrimitiveValue
+  : Record<string, PrimitiveValue | NestedState<Prev[Depth]>>;
+
+export type BaseStateType = NestedState<DeepSize>;
+
+type Path<T, D extends number = 3> = [D] extends [0]
+  ? []
+  : T extends PrimitiveValue
+  ? []
+  : {
+      [K in Extract<keyof T, PrimitiveValue>]:
+        | [K]
+        | [K, ...Path<T[K], Prev[D]>];
+    }[Extract<keyof T, PrimitiveValue>];
+
+export type PartialPathValue<T, P extends any[]> = P extends [
+  infer K,
+  ...infer R
+]
+  ? K extends keyof T
+    ? R extends []
+      ? T[K]
+      : PartialPathValue<T[K], Extract<R, any[]>>
+    : never
+  : T;
+
+const getDeep = <T, P extends Path<T>>(
+  obj: T,
+  path: P
+): PartialPathValue<T, P> => {
+  if (path.length === 0) return obj as PartialPathValue<T, P>;
+
+  const [head, ...rest] = path;
+  return getDeep(
+    obj[head as keyof T] as T,
+    rest as Path<T>
+  ) as PartialPathValue<T, P>;
+};
+
+const setDeep = <T, P extends Path<T>>(
+  obj: T,
+  path: P,
+  value: PartialPathValue<T, P>
+) => {
+  type Tmp = Record<string | number | symbol, unknown>;
+  let curr: unknown = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    if (!(key in (curr as Tmp))) {
+      (curr as Tmp)[key] = {};
+    }
+    curr = (curr as Tmp)[key];
+  }
+  (curr as Tmp)[path[path.length - 1]] = value;
+};
+
 export class BaseState<T extends BaseStateType> {
   private _state: T;
   private _initialState: T;
-  private _listeners: Map<keyof T | null, ChangeListener<T>[]> = new Map();
+  private _listeners: Map<string, ChangeListener<T>[]> = new Map();
 
   constructor(initialState: T) {
     this._state = { ...initialState };
@@ -9,131 +77,96 @@ export class BaseState<T extends BaseStateType> {
   }
 
   get(): T;
-  get<K extends keyof T>(key: K): T[K];
-  get(key?: keyof T) {
-    if (key !== undefined) return this._state[key];
-    return Object.freeze({ ...this._state });
+  get<P extends Path<T>>(path: P): PartialPathValue<T, P>;
+  get(path?: Path<T>) {
+    if (!path) return Object.freeze({ ...this._state });
+
+    return getDeep(this._state, path);
   }
 
+  set<P extends Path<T>>(path: P, value: PartialPathValue<T, P>): this;
   set(value: Partial<T>): this;
-  set<K extends keyof T>(key: K, value: T[K]): this;
-  set(keyOrValue: keyof T | Partial<T>, value?: T[keyof T]) {
-    if (keyOrValue && typeof keyOrValue === 'object') {
-      for (const k of Object.keys(keyOrValue)) {
-        this._updateKey(k, keyOrValue[k]!);
+  set(pathOrValue: any, value?: any) {
+    if (value !== undefined) {
+      this._updateKey(pathOrValue, value);
+    } else if (typeof pathOrValue === 'object') {
+      for (const k of Object.keys(pathOrValue) as (keyof T)[]) {
+        this._updateKey([k] as Path<T>, pathOrValue[k]!);
       }
-    } else if (value !== undefined) {
-      this._updateKey(keyOrValue as keyof T, value);
     } else {
       throw new Error('Invalid arguments for set()');
     }
-
     return this;
   }
 
-  protected _updateKey<K extends keyof T>(key: K, newValue: T[K]) {
-    const oldValue = this._state[key];
-    if (newValue !== oldValue) {
-      this._state[key] = newValue;
-      this._emit(key, newValue, oldValue);
-    }
-  }
-
-  protected _emit<K extends keyof T>(key: K, value: T[K], oldValue: T[K]) {
-    const global = this._listeners.get(null) ?? [];
-    const specific = this._listeners.get(key) ?? [];
-
-    for (const fn of [...specific, ...global]) {
-      try {
-        fn(key, value, oldValue);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }
-
-  on(fn: ChangeListener<T>, options?: { once?: boolean }): this;
-  on(key: keyof T, fn: ChangeListener<T>, options?: { once?: boolean }): this;
-  on(
-    keyOrFn: keyof T | ChangeListener<T>,
-    fnOrOptions?: ChangeListener<T> | { once?: boolean },
-    options?: { once?: boolean }
+  protected _updateKey<P extends Path<T>>(
+    path: P,
+    newValue: PartialPathValue<T, P>
   ) {
-    let fn: ChangeListener<T>;
-    let key: keyof T | null = null;
-    let once = false;
+    const oldValue = getDeep(this._state, path);
+    if (oldValue !== newValue) {
+      setDeep(this._state, path, newValue);
 
-    if (typeof keyOrFn === 'function') {
-      fn = keyOrFn;
-      once = (fnOrOptions as { once?: boolean })?.once ?? false;
-    } else {
-      key = keyOrFn;
-      fn = fnOrOptions as ChangeListener<T>;
-      once = options?.once ?? false;
+      this._emit(path, newValue, oldValue);
     }
+  }
 
-    if (once) {
-      const originalFn = fn;
-      fn = (key_, value, oldValue) => {
-        originalFn(key_, value, oldValue);
-        this.off(key, fn);
-      };
+  protected _emit<P extends Path<T>>(
+    path: P,
+    value: PartialPathValue<T, P>,
+    oldValue: PartialPathValue<T, P>
+  ) {
+    const key = path.join('.');
+    const fns = this._listeners.get(key) ?? [];
+
+    for (const fn of fns) {
+      fn(path, value, oldValue);
     }
+  }
 
-    const listeners = this._listeners.get(key) ?? [];
-    listeners.push(fn);
-    this._listeners.set(key, listeners);
+  on<P extends Path<T>>(path: P, fn: ChangeListener<T, P>): this {
+    const key = (path as (string | number)[]).join('.');
+    const arr = this._listeners.get(key) ?? [];
+
+    arr.push(fn as ChangeListener<T>);
+    this._listeners.set(key, arr);
 
     return this;
   }
 
-  off(fn: ChangeListener<T>): this;
-  off(key: keyof T | null, fn: ChangeListener<T>): this;
-  off(keyOrFn: keyof T | ChangeListener<T> | null, fn?: ChangeListener<T>) {
-    let targetFn: ChangeListener<T>;
-    let key: keyof T | null = null;
-
-    if (typeof keyOrFn === 'function') targetFn = keyOrFn;
-    else {
-      key = keyOrFn;
-      targetFn = fn as ChangeListener<T>;
-    }
-
-    const listeners = this._listeners.get(key);
-    if (listeners) {
-      const index = listeners.lastIndexOf(targetFn);
-      if (index !== -1) listeners.splice(index, 1);
+  off<P extends Path<T>>(path: P, fn: ChangeListener<T, P>): this {
+    const key = (path as (string | number)[]).join('.');
+    const arr = this._listeners.get(key);
+    if (arr) {
+      const index = arr.lastIndexOf(fn as ChangeListener<T>);
+      if (index >= 0) arr.splice(index, 1);
     }
 
     return this;
   }
 
-  update<K extends keyof T>(key: K, updater: (current: T[K]) => T[K]): this;
-  update<K extends keyof T>(
-    key: K,
-    updater: (current: T[K]) => Promise<T[K]>
-  ): Promise<this>;
-  update<K extends keyof T>(
-    key: K,
-    updater: (current: T[K]) => T[K] | Promise<T[K]>
-  ): this | Promise<this> {
-    const oldValue = this._state[key];
+  async update<P extends Path<T>>(
+    path: P,
+    updater: (
+      current: PartialPathValue<T, P>
+    ) => PartialPathValue<T, P> | Promise<PartialPathValue<T, P>>
+  ): Promise<this> {
+    const oldValue = getDeep(this._state, path);
     const result = updater(oldValue);
 
-    const applyNewValue = (newValue: T[K]) => {
-      this._updateKey(key, newValue);
+    const applyNewValue = (newValue: PartialPathValue<T, P>) => {
+      this._updateKey(path, newValue);
       return this;
     };
 
     if (
       result instanceof Promise ||
-      // for safe handling thenable objects
       (result && typeof (result as any).then === 'function')
     ) {
-      return (result as Promise<T[K]>).then(applyNewValue);
+      return (result as Promise<PartialPathValue<T, P>>).then(applyNewValue);
     }
 
-    return applyNewValue(result as T[K]);
+    return applyNewValue(result as PartialPathValue<T, P>);
   }
 
   reset(): this {
@@ -141,8 +174,8 @@ export class BaseState<T extends BaseStateType> {
     return this;
   }
 
-  has(key: keyof T) {
-    return key in this._state;
+  has<P extends Path<T>>(path: P) {
+    return getDeep(this._state, path) !== undefined;
   }
 
   clearListeners() {
@@ -150,19 +183,6 @@ export class BaseState<T extends BaseStateType> {
     return this;
   }
 }
-
-export type ChangeListener<T, K extends keyof T = keyof T> = (
-  key: K,
-  value: T[K],
-  oldValue: T[K]
-) => void;
-
-type PrimitiveValue = string | number | boolean;
-type DepthMap = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-type NestedState<Depth extends number> = Depth extends 0
-  ? PrimitiveValue
-  : Record<PropertyKey, PrimitiveValue | NestedState<DepthMap[Depth]>>;
-export type BaseStateType = NestedState<3>;
 
 export interface PersistentStateOptions {
   storage: {
@@ -183,20 +203,15 @@ export class PersistentState<T extends BaseStateType> extends BaseState<T> {
   }
 
   async init() {
-    const maybeLoad = this._storage.getItem(this._storageKey);
-    if (maybeLoad instanceof Promise) {
-      await maybeLoad.then((data) => {
-        if (data) {
-          super.set(JSON.parse(data) as Partial<T>);
-        }
-      });
-    } else if (maybeLoad) {
-      super.set(JSON.parse(maybeLoad) as Partial<T>);
-    }
+    const data = await this._storage.getItem(this._storageKey);
+    if (data) super.set(JSON.parse(data) as Partial<T>);
   }
 
-  protected _updateKey<K extends keyof T>(key: K, newValue: T[K]) {
-    super._updateKey(key, newValue);
+  protected _updateKey<P extends Path<T>>(
+    path: P,
+    newValue: PartialPathValue<T, P>
+  ) {
+    super._updateKey(path, newValue);
     void this._save();
   }
 

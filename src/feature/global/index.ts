@@ -3,6 +3,7 @@ import i18n from './_i18n.json';
 import { featureManager, FeatureModule, GroupFeature } from '..';
 
 export const globalFeatureModule = new FeatureModule(
+  'global',
   {
     style: {
       'init-hide-scroll': true,

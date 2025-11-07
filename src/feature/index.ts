@@ -1,31 +1,29 @@
-import { BaseState, type BaseStateType } from '@/utils/state';
+import { type BaseStateType, PersistentState } from '@/utils/state';
 import type {
   DefaultLanguageCode,
   LanguageCode,
   MaybePromise,
 } from '@/utils/type';
 
-export type BaseStateToString<T> = {
-  [K in keyof T]: T[K] extends Record<PropertyKey, any>
-    ? BaseStateToString<T[K]>
-    : { name: string; description?: string } | string;
-};
-
-export type FeatureModuleI18N<T extends BaseStateType> = {
-  [K in DefaultLanguageCode]: BaseStateToString<T>;
-} & {
-  [K in Exclude<LanguageCode, DefaultLanguageCode>]?: BaseStateToString<T>;
-};
-
 export class FeatureModule<
   T extends BaseStateType,
   I18N extends FeatureModuleI18N<T> = FeatureModuleI18N<T>
-> extends BaseState<{ enabled: boolean } & T> {
+> extends PersistentState<{ enabled: boolean } & T> {
+  public id: string;
   protected i18n?: Partial<I18N>;
 
-  constructor(defaultState: T, i18n?: Partial<I18N>) {
-    super({ enabled: true, ...defaultState });
+  constructor(id: string, defaultState: T, i18n?: Partial<I18N>) {
+    super(
+      { enabled: true, ...defaultState },
+      // TODO make storage configurable
+      { storage: localStorage, storageKey: `mk-feature-${id}` }
+    );
+    this.id = id;
     this.i18n = i18n;
+  }
+
+  getI18N(lang: LanguageCode) {
+    return this.i18n?.[lang as keyof I18N];
   }
 }
 
@@ -45,6 +43,10 @@ export class GroupFeature<
     ...features: Feature<NonNullable<T[K]>>[]
   ) {
     (this.features[name] ??= []).push(...features);
+  }
+
+  getFeatures() {
+    return this.features;
   }
 }
 
@@ -71,6 +73,18 @@ export type FeatureContext<T extends BaseStateType> = {
   module: FeatureModule<T>;
 };
 
+export type BaseStateToString<T> = {
+  [K in keyof T]: T[K] extends Record<PropertyKey, any>
+    ? BaseStateToString<T[K]>
+    : { name: string; description?: string } | string;
+};
+
+export type FeatureModuleI18N<T extends BaseStateType> = {
+  [K in DefaultLanguageCode]: BaseStateToString<T>;
+} & {
+  [K in Exclude<LanguageCode, DefaultLanguageCode>]?: BaseStateToString<T>;
+};
+
 export type CleanupFn<T extends BaseStateType> = (
   ctx: FeatureContext<T>
 ) => MaybePromise<any>;
@@ -93,14 +107,18 @@ export type Feature<T extends Record<PropertyKey, any>> = {
   setup?: CallbackWithCleanupFn<T>;
   liveReload?: boolean; // default: true
 } & (
-  | { setup: CallbackWithCleanupFn<T> }
+  | { setup: CallbackWithCleanupFn<T> } // setup only
+  // toggle only
   | {
       toggle: (
         enabled: boolean,
         ctx: FeatureContext<T>
       ) => CleanupResultAsync<T>;
     }
+  // toggle with enable/disable
   | { enable: CallbackWithCleanupFn<T>; disable?: CallbackWithCleanupFn<T> }
+  // button
+  | { click?: (ctx: FeatureContext<T>) => void }
 );
 
 import './exam';

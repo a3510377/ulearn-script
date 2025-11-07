@@ -5,7 +5,7 @@ export const defaultConfig = {
     examMark: true,
   },
 };
-export const examFeatureModule = new FeatureModule(defaultConfig);
+export const examFeatureModule = new FeatureModule('exam', defaultConfig);
 export const examFeatures = new GroupFeature(examFeatureModule);
 
 import './mark';

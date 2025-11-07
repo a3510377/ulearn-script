@@ -1,5 +1,5 @@
 import { SVG_MENU } from '@/assets/svg';
-import { MK_HIDDEN_SCROLL_CLASS } from '@/constants';
+import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from '@/constants';
 import {
   createElement,
   createStyle,
@@ -55,11 +55,11 @@ globalFeatures.register('menu', {
       customDropMenu.addEventListener('click', clickHandler);
 
       createStyle(`$css
-        .mk-component.custom-drop-menu {
+        .${MK_CUSTOM_COMPONENT}.custom-drop-menu {
           display: none;
         }
 
-        .mk-component.custom-layout {
+        .${MK_CUSTOM_COMPONENT}.custom-layout {
           width: 100%;
         }
 
@@ -73,8 +73,8 @@ globalFeatures.register('menu', {
         }
 
         @media (max-width: 920px) {
-          .header .mk-component.custom-layout:not(.mk-open-menu) ul,
-          .header .mk-component.custom-layout:not(.mk-open-menu) li {
+          .header .${MK_CUSTOM_COMPONENT}.custom-layout:not(.mk-open-menu) ul,
+          .header .${MK_CUSTOM_COMPONENT}.custom-layout:not(.mk-open-menu) li {
             display: none !important;
           }
 
@@ -96,14 +96,14 @@ globalFeatures.register('menu', {
             height: auto !important;
           }
 
-          .mk-component.custom-drop-menu {
+          .${MK_CUSTOM_COMPONENT}.custom-drop-menu {
             display: flex !important;
             align-items: center;
             margin-left: 1rem;
             margin-right: -1rem;
           }
 
-          .mk-component.custom-drop-menu > svg {
+          .${MK_CUSTOM_COMPONENT}.custom-drop-menu > svg {
             cursor: pointer;
             border-radius: 1rem;
             padding: 8px;
@@ -111,12 +111,12 @@ globalFeatures.register('menu', {
             transition: all 0.2s ease-in-out;
           }
 
-          .mk-component.custom-drop-menu > svg:hover {
+          .${MK_CUSTOM_COMPONENT}.custom-drop-menu > svg:hover {
             fill: #ffffffb5 !important;
             background: #00000026 !important;
           }
 
-          .mk-component.custom-layout.mk-open-menu {
+          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu {
             position: absolute;
             top: 50px;
             display: flex;
@@ -127,22 +127,22 @@ globalFeatures.register('menu', {
             background-color: #313e5c;
           }
 
-          .mk-component.custom-layout.mk-open-menu li {
+          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu li {
             display: inline-block !important;
           }
 
-          .mk-component.custom-layout.mk-open-menu .header-vertical-split-line.header-item {
+          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu .header-vertical-split-line.header-item {
             border: unset;
             height: 0 !important;
             display: block !important;
           }
 
-          .mk-component.custom-layout.mk-open-menu > ul {
+          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu > ul {
             height: auto;
             position: unset;
           }
 
-          .mk-component.custom-layout.mk-open-menu > ul > li {
+          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu > ul > li {
             height: auto;
             margin-left: 2.5rem;
             line-height: initial !important;
