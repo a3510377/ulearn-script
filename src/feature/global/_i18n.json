@@ -28,9 +28,9 @@
         "name": "允許使用開發者工具",
         "description": "允許使用開發者工具 (開發者工具在考試模式時可能被禁用)"
       },
-      "keep-session-alive": {
-        "name": "保持登入狀態",
-        "description": "防止自動登出以保持會話活躍"
+      "idle-check-disable": {
+        "name": "抑制長時間不活動導致的彈出提示",
+        "description": "防止因長時間不活動而彈出閒置警告提示"
       }
     }
   }

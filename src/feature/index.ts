@@ -37,7 +37,10 @@ export class FeatureModule<
 
   register<K extends Extract<keyof T, string>>(
     groupName: K,
-    ...features: FeatureObject<T>[]
+    ...features: FeatureObject<
+      T,
+      T[K] extends Record<string, any> ? keyof T[K] & string : never
+    >[]
   ) {
     if (!this.groups[groupName]) {
       this.groups[groupName] = [];
@@ -45,7 +48,10 @@ export class FeatureModule<
 
     this.groups[groupName]!.push(
       ...features.map((f) => {
-        return new Feature<T>(this as FeatureModule<T>, f, [groupName, f.id]);
+        return new Feature<T>(this as FeatureModule<T>, f as FeatureObject<T>, [
+          groupName,
+          f.id,
+        ]);
       })
     );
   }
@@ -304,8 +310,11 @@ export type CallbackWithCleanupFn<
   P extends any[] = []
 > = (ctx: FeatureContext<T>, ...args: P) => MaybePromise<CleanupResult<T>>;
 
-export type FeatureObject<T extends BaseStateType> = {
-  id: string;
+export type FeatureObject<
+  T extends BaseStateType,
+  K extends string = keyof T & string
+> = {
+  id: K;
   test: (() => MaybePromise<boolean>) | RegExp;
   setup?: CallbackWithCleanupFn<T>;
   liveReload?: boolean; // default: true

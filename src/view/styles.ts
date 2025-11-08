@@ -9,10 +9,6 @@ export const setupSettingsMenuStyle = () => {
       user-select: none;
     }
 
-    .mk-hide {
-      display: none !important;
-    }
-
     .mk-settings-fab {
       position: fixed;
       top: 50%;

@@ -59,4 +59,8 @@ export const defaultStyle = createStyle(`$css
     visibility: visible;
     padding-right: 14px;
   }
+
+  .mk-hide {
+    display: none !important;
+  }
 `);

@@ -26,7 +26,6 @@ export const registerMarkFeature = (module: ExamFeatureModule) => {
         .then(removeMark)
         .catch(() => {});
     },
-    // TODO remove any type
-    disable: async (ctx) => cleanups.forEach((fn) => fn(ctx as any)),
+    disable: async (ctx) => cleanups.forEach((fn) => fn(ctx)),
   });
 };

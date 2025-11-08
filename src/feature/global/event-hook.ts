@@ -1,5 +1,5 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
-import { createStyle } from '@/utils/dom';
+import { createStyle, waitForElement } from '@/utils/dom';
 import { disableDevToolDetector } from '@/utils/hook/dev-tool';
 
 import type { GlobalFeatures } from '.';
@@ -33,15 +33,24 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       enable: () => disableDevToolDetector(),
     },
     {
-      // 保持登入狀態
-      // 通過模擬用戶活動來防止自動登出
-      id: 'keep-session-alive',
+      // 抑制長時間不活動導致的彈出提示
+      // 防止因長時間不活動而彈出閒置警告提示
+      id: 'idle-check-disable',
       test: () => true,
       enable: () => {
         const intervalId = setInterval(
           () => document.dispatchEvent(new Event('mousemove')),
           5e3
         );
+
+        waitForElement('#idle-warning-popup')
+          .then(() => {
+            // 強制關閉彈出提示（如果存在的話）
+            // @ts-ignore
+            window.$('#idle-warning-popup').foundation('reveal', 'close');
+          })
+          .catch(() => {});
+
         return () => clearInterval(intervalId);
       },
     }

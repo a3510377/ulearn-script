@@ -20,7 +20,7 @@ export const defaultConfig = {
   'event-hook': {
     copy: true,
     'disable-devtool-detect': true,
-    'keep-session-alive': true,
+    'idle-check-disable': true,
   },
 };
 
