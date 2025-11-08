@@ -20,6 +20,22 @@ const userScriptHeader = `// ==UserScript==
 // @run-at       document-start
 // ==/UserScript==`;
 
+const minifyCss = (content: string): string => {
+  const cssString = lightningcss
+    .transform({
+      filename: '',
+      code: Buffer.from(content),
+      minify: true,
+    })
+    .code.toString();
+
+  return postcss([
+    autoprefixer({
+      overrideBrowserslist: ['> 0.5%', 'last 2 versions', 'not dead'],
+    }),
+  ]).process(cssString).css;
+};
+
 export default defineConfig({
   // TODO move to plugins dir
   plugins: [
@@ -31,7 +47,7 @@ export default defineConfig({
 
         const newCode = code.replace(
           /`(?:\$?(html|css))?((?:\\`|[^`])*)`/g,
-          (match, prefix, content) => {
+          (match, prefix: string, content: string) => {
             try {
               let minified = content;
               if (prefix === 'html') {
@@ -40,46 +56,28 @@ export default defineConfig({
                   removeComments: true,
                 });
               } else if (prefix === 'css') {
-                const variableMap = new Map<string, string>();
+                const vars: string[] = [];
 
                 content = content.replace(
-                  /\${\s*([^}]*)\s*}/g,
-                  (_: unknown, p1: string) => {
-                    if (!p1) return '';
-                    if (!variableMap.has(p1)) {
-                      variableMap.set(
-                        p1,
-                        '__tmp_class_' + Math.random().toString(36).slice(2)
-                      );
-                    }
-                    return variableMap.get(p1)!;
+                  /(\$?)\${\s*([^}]*)\s*}/g,
+                  (_, prefix, expr) => {
+                    const idx = vars.length;
+                    vars.push(expr);
+                    return prefix === '$'
+                      ? `.__VAR_${idx}__{--t:0}`
+                      : `__VAR_${idx}__`;
                   }
                 );
 
-                const cssString = lightningcss
-                  .transform({
-                    filename: '',
-                    code: Buffer.from(content),
-                    minify: true,
-                  })
-                  .code.toString();
+                minified = minifyCss(content);
 
-                minified = postcss([
-                  autoprefixer({
-                    overrideBrowserslist: [
-                      '> 0.5%',
-                      'last 2 versions',
-                      'not dead',
-                    ],
-                  }),
-                ]).process(cssString).css;
-
-                for (const [key, tmp] of variableMap.entries()) {
-                  minified = minified.replace(
-                    new RegExp(tmp, 'g'),
-                    `\${${key}}`
+                vars.forEach((expr, i) => {
+                  const varUsageRegex = new RegExp(
+                    `\\.__VAR_${i}__{--t:0}|__VAR_${i}__`,
+                    'g'
                   );
-                }
+                  minified = minified.replace(varUsageRegex, `\${${expr}}`);
+                });
               } else return match;
 
               // FIXME safe for backticks in content
@@ -92,6 +90,20 @@ export default defineConfig({
         );
 
         return newCode;
+      },
+    },
+    {
+      name: 'vite-plugin-minify-imported-raw-css',
+      enforce: 'pre',
+      async transform(code, id) {
+        if (!id.endsWith('.css?raw')) return null;
+        code = code.replace(/^export default\s+/, '').replace(/;?\s*$/g, '');
+        const rawCss = JSON.parse(code);
+
+        return {
+          code: `export default ${JSON.stringify(minifyCss(rawCss))};`,
+          map: null,
+        };
       },
     },
     {

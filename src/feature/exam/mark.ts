@@ -8,8 +8,7 @@ const cleanups: CleanupFn<typeof defaultConfig>[] = [];
 export const registerMarkFeature = (module: ExamFeatureModule) => {
   module.register('mark', {
     id: 'examMark',
-    test: () => true,
-    enable: async () => {
+    enable: () => {
       const removeMark = (el: HTMLElement) => {
         const originalBg = el.style.background;
         el.style.background = '';
@@ -26,6 +25,6 @@ export const registerMarkFeature = (module: ExamFeatureModule) => {
         .then(removeMark)
         .catch(() => {});
     },
-    disable: async (ctx) => cleanups.forEach((fn) => fn(ctx)),
+    disable: (ctx) => cleanups.forEach((fn) => fn(ctx)),
   });
 };

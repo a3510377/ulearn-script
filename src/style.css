@@ -1,0 +1,17 @@
+.course-header-container .course-header-content {
+  width: 90%;
+}
+
+.wrapper,
+.wrapper .main-content,
+.wrapper .main-content .main-content-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.wrapper .main-content,
+.wrapper .main-content .main-content-container,
+.main-content .main-content-container .main-content:last-child,
+.blank-prompt-info.blank-page {
+  flex: 1;
+}

@@ -9,6 +9,7 @@ import {
 } from '@/utils/state';
 import type { MaybePromise } from '@/utils/type';
 
+import { registerCourseModule } from './course';
 import { registerExamModule } from './exam';
 import { registerGlobalModule } from './global';
 
@@ -140,7 +141,7 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
   async check(): Promise<boolean> {
     const testValue = this.options.test;
     if (testValue instanceof RegExp) {
-      return testValue.test(window.location.href);
+      return testValue.test(window.location.pathname);
     } else if (typeof testValue === 'function') {
       try {
         const res = await testValue();
@@ -150,7 +151,8 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
         return false;
       }
     }
-    return false;
+    // No test means always enabled
+    return true;
   }
 
   async click(): Promise<void> {
@@ -217,6 +219,7 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
     type: 'init' | 'click',
     newValue?: boolean
   ): Promise<void> {
+    if (!(await this.check())) return;
     if (type === 'init' && 'setup' in this.options) {
       this.addCleanup(await this.safeCall(this.options.setup));
     }
@@ -313,7 +316,7 @@ export type FeatureObject<
   K extends string = keyof T & string
 > = {
   id: K;
-  test: (() => MaybePromise<boolean>) | RegExp;
+  test?: (() => MaybePromise<boolean>) | RegExp;
   setup?: CallbackWithCleanupFn<T>;
   liveReload?: boolean; // default: true
 } & (
@@ -326,5 +329,6 @@ export type FeatureObject<
   | { click?: (ctx: FeatureContext<T>) => MaybePromise<void> }
 );
 
+registerCourseModule(featureManager);
 registerExamModule(featureManager);
 registerGlobalModule(featureManager);

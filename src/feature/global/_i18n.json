@@ -10,7 +10,7 @@
     "style": {
       "init-hide-scroll": {
         "name": "初始化隱藏滾動條",
-        "description": "在頁面載入時隱藏滾動條，直到使用者開始滾動"
+        "description": "在頁面載入時隱藏滾動條，直到頁面內容加載完成"
       }
     },
     "menu": {

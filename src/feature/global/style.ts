@@ -5,7 +5,6 @@ import type { GlobalFeatures } from '.';
 export const registerStyleFeature = (group: GlobalFeatures) => {
   group.register('style', {
     id: 'init-hide-scroll',
-    test: () => true,
     enable: async () => {
       const INIT_HIDE_SCROLL_CLASSNAME = `${MK_HIDDEN_SCROLL_CLASS}-init`;
       const fixScrollStyleHandle = () => {

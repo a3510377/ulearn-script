@@ -1,5 +1,7 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 
+import { win } from './hook/dev-tool';
+
 export const parseClass = (
   ...classNames: (string | string[] | undefined)[]
 ): string[] => {
@@ -166,25 +168,37 @@ export const watchRemove = (el: Element, callback: (el: Element) => void) => {
   };
 };
 
-export const waitForAngular = (
+export const waitForLibrary = <K extends keyof Window>(
+  globalVar: K,
   timeout = 5000
-): Promise<angular.IAngularStatic> => {
+): Promise<NonNullable<Window[K]>> => {
   const interval = 50;
   const maxTries = timeout / interval;
   let tries = 0;
-
   return new Promise((resolve, reject) => {
     const timer = setInterval(() => {
       tries++;
-      if (unsafeWindow.angular && typeof unsafeWindow.angular === 'object') {
+      if (
+        win[globalVar] &&
+        (typeof win[globalVar] === 'object' ||
+          typeof win[globalVar] === 'function')
+      ) {
         clearInterval(timer);
-        resolve(unsafeWindow.angular);
+        resolve(win[globalVar]);
       } else if (tries >= maxTries) {
         clearInterval(timer);
-        reject(new Error('Angular not found within timeout'));
+        reject(new Error(`${globalVar} not found within timeout`));
       }
     }, interval);
   });
+};
+
+export const waitForJQuery = (timeout = 5000) => {
+  return waitForLibrary('jQuery', timeout);
+};
+
+export const waitForAngular = (timeout = 5000) => {
+  return waitForLibrary('angular', timeout);
 };
 
 export const addHref = async (

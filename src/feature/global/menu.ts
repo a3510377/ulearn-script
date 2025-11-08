@@ -13,7 +13,6 @@ import type { GlobalFeatures } from '.';
 export const registerMenuFeature = (group: GlobalFeatures) => {
   group.register('menu', {
     id: 'RWD-support',
-    test: () => true,
     // 由於強制更改 DOM 結構，若支援 liveReload 會有點麻煩，懶惰 :>
     liveReload: false,
     enable: async () => {

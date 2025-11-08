@@ -5,7 +5,6 @@ import type { GlobalFeatures } from '.';
 export const registerFooterFeature = (group: GlobalFeatures) => {
   group.register('footer', {
     id: 'hidden',
-    test: () => true,
     enable: async () => {
       const style = createStyle(`$css
         .main-content {
