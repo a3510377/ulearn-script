@@ -5,7 +5,7 @@ import { registerMenuFeature } from './menu';
 import { registerStyleFeature } from './style';
 
 import type { FeatureManager } from '..';
-import { FeatureModule, GroupFeature } from '..';
+import { FeatureModule } from '..';
 
 export const defaultConfig = {
   style: {
@@ -26,21 +26,15 @@ export const defaultConfig = {
 
 export const registerGlobalModule = (moduleManager: FeatureManager) => {
   const globalFeatureModule = new FeatureModule('global', defaultConfig, i18n);
-  const globalFeatures = new GroupFeature(globalFeatureModule);
 
-  registerEventHookFeature(globalFeatures);
-  registerFooterFeature(globalFeatures);
-  registerMenuFeature(globalFeatures);
-  registerStyleFeature(globalFeatures);
+  registerEventHookFeature(globalFeatureModule);
+  registerFooterFeature(globalFeatureModule);
+  registerMenuFeature(globalFeatureModule);
+  registerStyleFeature(globalFeatureModule);
 
   moduleManager.register('global', globalFeatureModule);
 
-  return { globalFeatures, globalFeatureModule };
+  return globalFeatureModule;
 };
 
-export type GlobalFeatures = ReturnType<
-  typeof registerGlobalModule
->['globalFeatures'];
-export type GlobalFeatureModule = ReturnType<
-  typeof registerGlobalModule
->['globalFeatureModule'];
+export type GlobalFeatures = ReturnType<typeof registerGlobalModule>;

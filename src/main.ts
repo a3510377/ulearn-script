@@ -1,3 +1,4 @@
+import { featureManager } from './feature';
 import { initSettingsMenu } from './view/index';
 
 import './style';
@@ -9,6 +10,8 @@ const main = async () => {
   if (/(.+\.)?tronclass\.com(\.tw)?/.test(host) && pathname === '/') {
     return;
   }
+
+  await featureManager.init();
 
   // Initialize all components
   try {

@@ -1,6 +1,6 @@
 ﻿import { createElement, onClickOutside } from '@/utils/dom';
 
-import { buildPanel } from './panel';
+import { buildSettingsPanel } from './panel';
 import { setupSettingsMenuStyle } from './styles';
 
 const DRAG_THRESHOLD = 5;
@@ -285,12 +285,12 @@ export const initSettingsMenu = () => {
     }
   };
 
-  const panelCleanup = buildPanel(menuPanelEl, () => {
+  const panelCleanup = buildSettingsPanel(menuPanelEl, () => {
     menuPanelEl.classList.add('mk-hide');
   });
 
   settingsMenuEl.append(menuPanelEl, fabButtonEl);
-  document.body.appendChild(settingsMenuEl);
+  document.body.append(settingsMenuEl);
 
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('pointermove', onPointerMove);

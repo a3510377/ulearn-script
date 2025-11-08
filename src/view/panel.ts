@@ -1,47 +1,54 @@
 import { featureManager } from '@/feature';
+import { getI18nForLang } from '@/utils/utils';
+
+import i18n from './_i18n.json';
+import { buildContentUI } from './contentBuild';
 
 import { createElement } from '#/dom';
 
-export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
+export const buildSettingsPanel = (panel: HTMLElement, onClose: () => void) => {
   // Title
   const title = createElement('div', 'mk-settings-title');
-  title.textContent = '腳本設定';
-  panel.appendChild(title);
+  title.textContent = getI18nForLang(i18n).settings?.title ?? 'Settings';
+  panel.append(title);
 
   // Tabs
   const tabs = createElement('div', 'mk-settings-tabs');
-  const tabButtons: { id: string; label: string }[] = [];
-
-  for (const [name, _feature] of featureManager.get()) {
-    const tabContent = createElement('div', 'mk-settings-tab-content');
-    tabContent.textContent = `Settings for ${name}`;
-    tabButtons.push({ id: name, label: name });
-  }
-
   const tabContents: Record<string, HTMLElement> = {};
 
-  tabButtons.forEach(({ id, label }, index) => {
+  const content = createElement('div', 'mk-settings-content');
+  for (const [index, [id, module]] of Array.from(
+    featureManager.get() // Map<string, FeatureModule<any>>
+  ).entries()) {
+    const moduleInfo = module.getI18N()?.module;
+    const moduleContentEl = buildContentUI(id, module);
+    const label = moduleInfo?.name ?? id;
+    const description = moduleInfo?.description ?? '';
+    tabContents[id] = moduleContentEl;
+
     const btn = createElement('button', 'mk-settings-tab');
     btn.textContent = `${label}`;
     btn.dataset.tab = id;
-    if (index === 0) btn.classList.add('active');
-    tabs.appendChild(btn);
-  });
 
-  panel.appendChild(tabs);
+    // TODO global tooltip util
+    if (description) {
+      const tooltip = createElement('div', 'mk-settings-tab-tooltip');
+      tooltip.textContent = description;
 
-  // Content container
-  const content = createElement('div', 'mk-settings-content');
+      btn.title = description;
+      btn.append(tooltip);
+    }
 
-  Object.entries(tabContents).forEach(([id, pane], index) => {
-    pane.classList.add('mk-settings-tab-pane');
-    pane.dataset.pane = id;
+    if (index === 0) {
+      moduleContentEl.classList.add('active');
+      btn.classList.add('active');
+    }
 
-    if (index === 0) pane.classList.add('active');
-    content.appendChild(pane);
-  });
+    tabs.append(btn);
+    content.append(moduleContentEl);
+  }
 
-  panel.appendChild(content);
+  panel.append(tabs, content);
 
   // Tab switching logic
   tabs.addEventListener('click', (e) => {
@@ -54,17 +61,17 @@ export const buildPanel = (panel: HTMLElement, onClose: () => void) => {
 
     // Update active tab button
     tabs
-      .querySelectorAll('.mk-settings-tab')
+      .querySelectorAll('.mk-settings-tab.active')
       .forEach((tab) => tab.classList.remove('active'));
     btn.classList.add('active');
 
-    // Update active pane
     content
-      .querySelectorAll('.mk-settings-tab-pane')
-      .forEach((pane) => pane.classList.remove('active'));
+      .querySelectorAll('.mk-settings-module.active')
+      .forEach((module) => module.classList.remove('active'));
 
-    const targetPane = content.querySelector(`[data-pane="${targetTab}"]`);
-    if (targetPane) targetPane.classList.add('active');
+    content
+      .querySelector(`[data-module="${targetTab}"]`)
+      ?.classList.add('active');
   });
 
   // Close on Escape key

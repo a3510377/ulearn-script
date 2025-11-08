@@ -82,6 +82,9 @@ export const setupSettingsMenuStyle = () => {
       left: 0;
       width: 80%;
       max-width: 40rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
       padding: 1rem;
       box-shadow: 0 4px 20px #0000004d;
       border-radius: 1rem;
@@ -107,7 +110,6 @@ export const setupSettingsMenuStyle = () => {
       font-size: 1.7rem;
       text-align: center;
       font-weight: bold;
-      margin-bottom: 1rem;
     }
 
     .mk-settings-menu-panel .mk-settings-tabs {
@@ -115,7 +117,6 @@ export const setupSettingsMenuStyle = () => {
       justify-content: space-between;
       gap: 1.5rem;
       padding: 0 0.5rem;
-      margin-bottom: 1rem;
     }
 
     .mk-settings-menu-panel .mk-settings-tab {
@@ -149,9 +150,7 @@ export const setupSettingsMenuStyle = () => {
       overflow-y: auto;
       padding-right: 1rem;
       scrollbar-gutter: stable;
-      scrollbar-width: auto;
       overscroll-behavior-y: contain;
-
       scrollbar-width: thin;
       scrollbar-color: #00000073 #00000014;
     }
@@ -180,92 +179,80 @@ export const setupSettingsMenuStyle = () => {
     .mk-settings-menu-panel .mk-settings-content::-webkit-scrollbar-thumb:active {
       background-color: #00000099;
     }
+  `);
 
-    .mk-settings-menu-panel .mk-settings-tab-pane {
+  const settingsPanelModuleStyle = createStyle(`$css
+    .mk-settings-menu-panel .mk-settings-module {
       display: none;
     }
 
-    .mk-settings-menu-panel .mk-settings-tab-pane.active {
+    .mk-settings-menu-panel .mk-settings-module.active {
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
 
-    .mk-settings-menu-panel .mk-settings-field {
+    .mk-settings-module .mk-settings-group-title {
+      cursor: pointer;
+      position: relative;
+      font-weight: bold;
+      margin-bottom: 0.5rem !important;
+      border-bottom: 2px solid #3333336b;
+      padding-bottom: 0.25rem;
+    }
+
+    .mk-settings-module .mk-settings-group-title::before {
+      content: "▼";
+      display: inline-block;
+      transition: .2s transform;
+      padding: 0 0.5rem;
+    }
+
+    .mk-settings-module .mk-settings-group-title.collapsed::before {
+      transform: rotate(-90deg);
+    }
+
+    .mk-settings-group-content {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 0.5rem;
     }
 
-    .mk-settings-menu-panel .mk-settings-row {
+    .mk-settings-group-title.collapsed ~ .mk-settings-group-content {
+      display: none;
+    }
+  `);
+
+  const settingsPanelModuleComponentStyle = createStyle(`$css
+    .mk-settings-module .mk-settings-feature {
+      padding: 0.3rem 1rem;
+      border-radius: 0.5rem;
+      transition: background-color 0.2s;
+    }
+
+    .mk-settings-module .mk-settings-feature:hover {
+      background-color: #ffffff33;
+    }
+
+    .mk-settings-feature-base-wrapper {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      padding: 0.25rem 0;
+      align-items: center;
     }
 
-    .mk-settings-menu-panel .mk-settings-row.mk-field-split {
-      align-items: unset;
-      flex-direction: column;
-    }
-
-    .mk-settings-menu-panel .mk-settings-row.mk-field-split .mk-settings-field {
-      justify-content: flex-end;
-    }
-
-    .mk-settings-menu-panel .mk-settings-label {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-
-    .mk-settings-menu-panel .mk-settings-desc {
-      margin-top: 0.25rem;
-      font-size: 0.95rem;
-      color: #3a3a3a;
-      opacity: 0.9;
-    }
-
-    .mk-settings-menu-panel .mk-input[type='number'],
-    .mk-settings-menu-panel .mk-select {
-      height: 2rem;
-      padding: 0 0.5rem;
-      border-radius: 0.375rem;
-      border: 1px solid #0000002b;
-      background-color: #fff;
-      color: #111;
-    }
-
-    .mk-settings-menu-panel .mk-input[type='number']:focus,
-    .mk-settings-menu-panel .mk-select:focus {
-      outline: none;
-      border-color: #5eb3ff;
-      box-shadow: 0 0 0 3px #5eb3ff40;
-    }
-
-    .mk-settings-menu-panel .mk-input[type='range'] {
-      width: 12rem;
-    }
-
-    .mk-settings-menu-panel .mk-checkbox {
+    .mk-settings-module input[type=checkbox].mk-settings-feature-input {
       width: 1.2rem;
       height: 1.2rem;
-      accent-color: #4a9fff;
-    }
-
-    .mk-settings-menu-panel .mk-kv {
-      margin-left: 0.5rem;
-      font-size: 1rem;
-      min-width: 2.5rem;
-      color: #2a2a2a;
-      opacity: 0.9;
-      text-align: end;
+      border: 2px solid #333;
+      border-radius: 0.25rem;
+      background-color: white;
     }
   `);
 
   return () => {
     settingsMenuStyle.remove();
     settingsPanelStyle.remove();
+    settingsPanelModuleStyle.remove();
+    settingsPanelModuleComponentStyle.remove();
   };
 };

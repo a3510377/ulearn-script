@@ -69,7 +69,7 @@ export const createStyle = (
 ): HTMLStyleElement => {
   const css = createElement('style', 'mk-style');
   css.textContent = code;
-  node.appendChild(css);
+  node.append(css);
 
   return css;
 };
@@ -198,6 +198,6 @@ export const addHref = async (
     hrefEl.setAttribute('ng-href', href);
 
     el.parentNode?.insertBefore(hrefEl, el);
-    hrefEl.appendChild(el);
+    hrefEl.append(el);
   }
 };

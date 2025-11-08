@@ -15,7 +15,7 @@ export type NestedState<Depth extends number> = Depth extends 0
 
 export type BaseStateType = NestedState<DeepSize>;
 
-type Path<T, D extends number = 3> = [D] extends [0]
+export type Path<T, D extends number = 3> = [D] extends [0]
   ? []
   : T extends PrimitiveValue
   ? []
@@ -36,20 +36,24 @@ export type PartialPathValue<T, P extends any[]> = P extends [
     : never
   : T;
 
-const getDeep = <T, P extends Path<T>>(
+export const getDeep = <T, P extends Path<T>>(
   obj: T,
   path: P
 ): PartialPathValue<T, P> => {
   if (path.length === 0) return obj as PartialPathValue<T, P>;
 
   const [head, ...rest] = path;
+  if (!obj || (head && obj && typeof obj === 'object' && !(head in obj))) {
+    return undefined as PartialPathValue<T, P>;
+  }
+
   return getDeep(
     obj[head as keyof T] as T,
     rest as Path<T>
   ) as PartialPathValue<T, P>;
 };
 
-const setDeep = <T, P extends Path<T>>(
+export const setDeep = <T, P extends Path<T>>(
   obj: T,
   path: P,
   value: PartialPathValue<T, P>

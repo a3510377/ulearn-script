@@ -1,12 +1,12 @@
 import { waitForElement } from '@/utils/dom';
 
-import type { CleanupFn } from '..';
-import type { defaultConfig, ExamFeatures } from '.';
+import { type CleanupFn } from '..';
+import type { defaultConfig, ExamFeatureModule } from '.';
 
 const cleanups: CleanupFn<typeof defaultConfig>[] = [];
 
-export const registerMarkFeature = (group: ExamFeatures) => {
-  group.register('mark', {
+export const registerMarkFeature = (module: ExamFeatureModule) => {
+  module.register('mark', {
     id: 'examMark',
     test: () => true,
     enable: async () => {

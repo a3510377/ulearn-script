@@ -1,0 +1,14 @@
+{
+  "zh-TW": {
+    "execute": "執行",
+    "toggle": {
+      "on": "開啟",
+      "off": "關閉"
+    },
+    "settings": {
+      "title": "設定面板",
+      "searchPlaceholder": "搜尋設定..."
+    }
+  },
+  "zh-CN": {}
+}

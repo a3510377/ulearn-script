@@ -1,7 +1,7 @@
 import { registerMarkFeature } from './mark';
 
 import type { FeatureManager } from '..';
-import { FeatureModule, GroupFeature } from '..';
+import { FeatureModule } from '..';
 
 export const defaultConfig = {
   mark: {
@@ -11,18 +11,12 @@ export const defaultConfig = {
 
 export const registerExamModule = (moduleManager: FeatureManager) => {
   const examFeatureModule = new FeatureModule('exam', defaultConfig);
-  const examFeatures = new GroupFeature(examFeatureModule);
 
-  registerMarkFeature(examFeatures);
+  registerMarkFeature(examFeatureModule);
 
   moduleManager.register('exam', examFeatureModule);
 
-  return { examFeatures, examFeatureModule };
+  return examFeatureModule;
 };
 
-export type ExamFeatures = ReturnType<
-  typeof registerExamModule
->['examFeatures'];
-export type ExamFeatureModule = ReturnType<
-  typeof registerExamModule
->['examFeatureModule'];
+export type ExamFeatureModule = ReturnType<typeof registerExamModule>;

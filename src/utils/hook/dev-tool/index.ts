@@ -35,7 +35,7 @@ export const disableDevToolDetector = () => {
       return log.call(this);
     }
 
-    return log.apply(this, args);
+    return log.call(this, obj, ...args);
   });
 
   hook(

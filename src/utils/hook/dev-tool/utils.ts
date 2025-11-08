@@ -32,7 +32,7 @@ export const bound = Object.freeze({
   Reflect: bindAll(native.Reflect),
   performance: native.performance,
   setTimeout: native.setTimeout.bind(win),
-  Proxy: bindAll(native.Proxy),
+  Proxy: native.Proxy,
 });
 
 /**

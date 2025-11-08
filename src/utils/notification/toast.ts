@@ -17,7 +17,7 @@ class ToastManager {
     this.activeToasts = new Set();
     this.viewport = createElement('div', 'mk-toast-viewport');
     this.viewport.tabIndex = 0;
-    document.body.appendChild(this.viewport);
+    document.body.append(this.viewport);
 
     document.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -93,7 +93,7 @@ class ToastManager {
     }: { duration?: number; type?: keyof typeof TOAST_ICONS } = {}
   ) {
     const toastEl = this.createToastElement(message, type);
-    this.viewport.appendChild(toastEl);
+    this.viewport.append(toastEl);
     this.activeToasts.add(toastEl);
 
     let timer: number | null = null;
