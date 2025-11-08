@@ -1,6 +1,12 @@
 {
   "zh-TW": {
     "module": { "name": "通用功能" },
+    "groups": {
+      "style": "樣式調整",
+      "menu": "選單優化",
+      "footer": "頁腳調整",
+      "event-hook": "抑制事件"
+    },
     "style": {
       "init-hide-scroll": {
         "name": "初始化隱藏滾動條",

@@ -282,9 +282,7 @@ export type BaseStateToString<T> = {
 
 export type FeatureModuleMessageFull<T extends BaseStateType> = {
   module: { name: string; description?: string };
-  groups?: {
-    [K in keyof T]?: { name: string; description?: string };
-  };
+  groups?: { [K in keyof T]?: string };
 } & BaseStateToString<T>;
 
 export type FeatureModuleI18N<T extends BaseStateType> = {

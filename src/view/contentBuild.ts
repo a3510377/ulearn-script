@@ -19,7 +19,7 @@ export const buildContentUI = <T extends BaseStateType>(
     groupWrapper.dataset.group = groupID;
 
     const title = createElement('h2', 'mk-settings-group-title');
-    title.textContent = groupID;
+    title.textContent = module.getI18N()?.groups?.[groupID] || groupID;
     title.addEventListener('click', () => title.classList.toggle('collapsed'));
     groupWrapper.append(title);
 

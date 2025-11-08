@@ -142,7 +142,7 @@ export const setupSettingsMenuStyle = () => {
 
     .mk-settings-menu-panel .mk-settings-content {
       min-height: 20rem;
-      max-height: 20rem;
+      max-height: 28rem;
       overflow-y: auto;
       padding-right: 1rem;
       scrollbar-gutter: stable;

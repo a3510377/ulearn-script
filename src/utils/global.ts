@@ -1,4 +1,15 @@
-export const SUPPORTED_LANGUAGE_CODES = ['zh-TW', 'zh-CN'] as const;
+// All TronClass supported language codes, but not all are fully translated yet
+export const SUPPORTED_LANGUAGE_CODES = [
+  'zh-TW',
+  'zh-CN',
+  'zh-MO',
+  'en-US',
+  'en-GB',
+  'th-TH',
+  'id-ID',
+  'ms-MY',
+  'vi-VN',
+] as const;
 
 export const DEFAULT_LANGUAGE_CODE = 'zh-TW';
 
