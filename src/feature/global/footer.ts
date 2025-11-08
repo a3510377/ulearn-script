@@ -8,14 +8,14 @@ export const registerFooterFeature = (group: GlobalFeatures) => {
     test: () => true,
     enable: async () => {
       const style = createStyle(`$css
-      .main-content {
-        padding-bottom: 0 !important;
-      }
+        .main-content {
+          padding-bottom: 0 !important;
+        }
 
-      [data-category=tronclass-footer] {
-        display: none !important;
-      }
-    `);
+        [data-category=tronclass-footer] {
+          display: none !important;
+        }
+      `);
 
       return () => style.remove();
     },

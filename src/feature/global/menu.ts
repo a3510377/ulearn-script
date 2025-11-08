@@ -55,100 +55,100 @@ export const registerMenuFeature = (group: GlobalFeatures) => {
         customDropMenu.addEventListener('click', clickHandler);
 
         createStyle(`$css
-        .${MK_CUSTOM_COMPONENT}.custom-drop-menu {
-          display: none;
-        }
-
-        .${MK_CUSTOM_COMPONENT}.custom-layout {
-          width: 100%;
-        }
-
-        .layout-row.default-layout {
-          display: flex;
-          justify-content: space-between;
-        }
-
-        .mobile-header .left-header img.logo {
-          margin: unset !important;
-        }
-
-        @media (max-width: 920px) {
-          .header .${MK_CUSTOM_COMPONENT}.custom-layout:not(.mk-open-menu) ul,
-          .header .${MK_CUSTOM_COMPONENT}.custom-layout:not(.mk-open-menu) li {
-            display: none !important;
-          }
-
-          .header .profile-item {
-            gap: 8px;
-          }
-
-          .header .profile .dropdown-list, .header .profile .dropdown-list .dropdown-item {
-            left: unset !important;
-            right: unset !important;
-          }
-
-          .header .profile .dropdown-list .autocollapse-container ul {
-            left: 182px !important;
-            right: unset !important;
-          }
-
-          .header .profile-item .current-user-name {
-            height: auto !important;
-          }
-
           .${MK_CUSTOM_COMPONENT}.custom-drop-menu {
-            display: flex !important;
-            align-items: center;
-            margin-left: 1rem;
-            margin-right: -1rem;
+            display: none;
           }
 
-          .${MK_CUSTOM_COMPONENT}.custom-drop-menu > svg {
-            cursor: pointer;
-            border-radius: 1rem;
-            padding: 8px;
-            width: 2.5rem;
-            transition: all 0.2s ease-in-out;
+          .${MK_CUSTOM_COMPONENT}.custom-layout {
+            width: 100%;
           }
 
-          .${MK_CUSTOM_COMPONENT}.custom-drop-menu > svg:hover {
-            fill: #ffffffb5 !important;
-            background: #00000026 !important;
-          }
-
-          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu {
-            position: absolute;
-            top: 50px;
+          .layout-row.default-layout {
             display: flex;
-            flex-direction: column;
-            left: 0;
-            right: 0;
-            z-index: 999;
-            background-color: #313e5c;
+            justify-content: space-between;
           }
 
-          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu li {
-            display: inline-block !important;
+          .mobile-header .left-header img.logo {
+            margin: unset !important;
           }
 
-          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu .header-vertical-split-line.header-item {
-            border: unset;
-            height: 0 !important;
-            display: block !important;
-          }
+          @media (max-width: 920px) {
+            .header .${MK_CUSTOM_COMPONENT}.custom-layout:not(.mk-open-menu) ul,
+            .header .${MK_CUSTOM_COMPONENT}.custom-layout:not(.mk-open-menu) li {
+              display: none !important;
+            }
 
-          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu > ul {
-            height: auto;
-            position: unset;
-          }
+            .header .profile-item {
+              gap: 8px;
+            }
 
-          .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu > ul > li {
-            height: auto;
-            margin-left: 2.5rem;
-            line-height: initial !important;
+            .header .profile .dropdown-list, .header .profile .dropdown-list .dropdown-item {
+              left: unset !important;
+              right: unset !important;
+            }
+
+            .header .profile .dropdown-list .autocollapse-container ul {
+              left: 182px !important;
+              right: unset !important;
+            }
+
+            .header .profile-item .current-user-name {
+              height: auto !important;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-drop-menu {
+              display: flex !important;
+              align-items: center;
+              margin-left: 1rem;
+              margin-right: -1rem;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-drop-menu > svg {
+              cursor: pointer;
+              border-radius: 1rem;
+              padding: 8px;
+              width: 2.5rem;
+              transition: all 0.2s ease-in-out;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-drop-menu > svg:hover {
+              fill: #ffffffb5 !important;
+              background: #00000026 !important;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu {
+              position: absolute;
+              top: 50px;
+              display: flex;
+              flex-direction: column;
+              left: 0;
+              right: 0;
+              z-index: 999;
+              background-color: #313e5c;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu li {
+              display: inline-block !important;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu .header-vertical-split-line.header-item {
+              border: unset;
+              height: 0 !important;
+              display: block !important;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu > ul {
+              height: auto;
+              position: unset;
+            }
+
+            .${MK_CUSTOM_COMPONENT}.custom-layout.mk-open-menu > ul > li {
+              height: auto;
+              margin-left: 2.5rem;
+              line-height: initial !important;
+            }
           }
-        }
-      `);
+        `);
       });
     },
   });

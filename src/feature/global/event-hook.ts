@@ -16,10 +16,10 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       test: () => true,
       enable: async () => {
         const style = createStyle(`$css
-        *:not(.${MK_CUSTOM_COMPONENT}) {
-          user-select: text !important;
-        }
-      `);
+          *:not(.${MK_CUSTOM_COMPONENT}) {
+            user-select: text !important;
+          }
+        `);
 
         return () => style.remove();
       },
