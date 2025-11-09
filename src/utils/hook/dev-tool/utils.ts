@@ -15,14 +15,14 @@ export const native = Object.freeze({
  * 綁定方法到原始 this（避免被覆寫的 prototype 污染）
  * @param obj 要處理的對象
  */
-export function bindAll<T extends object>(obj: T): T {
+export const bindAll = <T extends object>(obj: T): T => {
   const result: T = {} as T;
   for (const key of native.Reflect.ownKeys(obj) as (keyof T)[]) {
     const value = obj[key];
     result[key] = typeof value === 'function' ? value.bind(obj) : value;
   }
   return result;
-}
+};
 
 /** 綁定後的原生安全版本 */
 export const bound = Object.freeze({

@@ -20,7 +20,15 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
           }
         `);
 
-        return () => style.remove();
+        const preventDefault = (event: Event) => {
+          event.stopPropagation();
+        };
+        document.addEventListener('copy', preventDefault, true);
+
+        return () => {
+          style.remove();
+          document.removeEventListener('copy', preventDefault, true);
+        };
       },
     },
     {
@@ -28,6 +36,9 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       // 防止網站檢測並阻止開發者工具的使用
       id: 'disable-devtool-detect',
       liveReload: false,
+      // TODO 改善此功能以支援主頁面
+      // 由於此功能會導致主頁面 for-while loop 問題，暫時只在子頁面啟用
+      test: /^\/.+/,
       enable: () => disableDevToolDetector(),
     },
     {
