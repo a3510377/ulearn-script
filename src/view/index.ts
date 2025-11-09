@@ -1,4 +1,5 @@
 ﻿import { createElement, onClickOutside } from '@/utils/dom';
+import { PersistentState } from '@/utils/state';
 
 import { buildSettingsPanel } from './panel';
 import { setupSettingsMenuStyle } from './styles';
@@ -6,6 +7,14 @@ import { setupSettingsMenuStyle } from './styles';
 const DRAG_THRESHOLD = 5;
 const DRAG_DELAY = 150;
 const BOUNDARY_PADDING = 16;
+
+export const panelPositionState = new PersistentState<{
+  y: number;
+  direction: 'left' | 'right';
+}>(
+  { y: 50, direction: 'left' },
+  { storage: localStorage, storageKey: 'mk-settings-panel-state' }
+);
 
 export const initSettingsMenu = () => {
   // Avoid duplicate initialization
@@ -18,6 +27,27 @@ export const initSettingsMenu = () => {
   const fabButtonEl = createElement('div', 'mk-settings-fab');
 
   const cleanupSettingsMenuStyle = setupSettingsMenuStyle();
+
+  panelPositionState
+    .init()
+    .then(() => {
+      const data = panelPositionState.get();
+      if (data && typeof data.y === 'number') {
+        const y = Math.max(0, Math.min(100, data.y));
+        fabButtonEl.style.top = `${y}%`;
+
+        if (data.direction === 'right') {
+          fabButtonEl.style.left = 'unset';
+          fabButtonEl.style.right = '0px';
+          fabButtonEl.classList.add('right');
+        } else {
+          fabButtonEl.style.left = '0px';
+          fabButtonEl.style.right = 'unset';
+          fabButtonEl.classList.remove('right');
+        }
+      }
+    })
+    .catch();
 
   const updateMenuPanelPosition = () => {
     const fabRect = fabButtonEl.getBoundingClientRect();
@@ -259,6 +289,11 @@ export const initSettingsMenu = () => {
 
     fabButtonEl.classList.toggle('right', !isLeft);
     fabButtonEl.style.transform = 'translateY(0)';
+
+    panelPositionState.set({
+      y: Math.round((rect.top / window.innerHeight) * 100),
+      direction: isLeft ? 'left' : 'right',
+    });
 
     // Update panel position if visible
     if (!menuPanelEl.classList.contains('mk-hide')) {
