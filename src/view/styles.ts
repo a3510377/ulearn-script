@@ -236,6 +236,14 @@ export const setupSettingsMenuStyle = () => {
       align-items: center;
     }
 
+    .mk-settings-feature-base-wrapper h3 {
+      font-weight: 900;
+    }
+
+    .mk-settings-feature-base-wrapper .mk-settings-feature-description {
+      font-weight: normal;
+    }
+
     .mk-settings-module input[type=checkbox].mk-settings-feature-input {
       width: 1.2rem;
       height: 1.2rem;

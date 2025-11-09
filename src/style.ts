@@ -1,9 +1,7 @@
 import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from './constants';
-import style from './style.css?raw';
 import { createStyle } from './utils/dom';
 
-export const defaultStyle = createStyle(
-  `$css
+export const defaultStyle = createStyle(`$css
   .${MK_CUSTOM_COMPONENT} {
     box-sizing: border-box;
   }
@@ -18,6 +16,7 @@ export const defaultStyle = createStyle(
   input.${MK_CUSTOM_COMPONENT},
   select.${MK_CUSTOM_COMPONENT} {
     margin: 0 !important;
+    padding: 0 !important;
     color: inherit !important;
     font-family: inherit !important;
   }
@@ -65,7 +64,4 @@ export const defaultStyle = createStyle(
   .mk-hide {
     display: none !important;
   }
-
-  $${style}
-`
-);
+`);
