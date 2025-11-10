@@ -1,6 +1,9 @@
 {
   "zh-TW": {
-    "module": { "name": "通用功能" },
+    "module": {
+      "name": "通用功能",
+      "description": "提供基礎的功能調整選項"
+    },
     "groups": {
       "style": "樣式調整",
       "menu": "選單優化",

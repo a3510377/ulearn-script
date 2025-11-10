@@ -4,8 +4,8 @@ import { PersistentState } from '@/utils/state';
 import { buildSettingsPanel } from './panel';
 import { setupSettingsMenuStyle } from './styles';
 
-const DRAG_THRESHOLD = 5;
 const DRAG_DELAY = 150;
+const DRAG_THRESHOLD = 5;
 const BOUNDARY_PADDING = 16;
 
 export const panelPositionState = new PersistentState<{

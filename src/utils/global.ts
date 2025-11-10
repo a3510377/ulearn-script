@@ -19,9 +19,7 @@ export const USER_LANGUAGE_CODE: LanguageCode = (() => {
     return lang as LanguageCode;
   }
 
-  if (lang.startsWith('zh')) {
-    return 'zh-TW';
-  }
+  if (lang.startsWith('zh')) return 'zh-TW';
 
   return DEFAULT_LANGUAGE_CODE;
 })();

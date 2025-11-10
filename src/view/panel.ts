@@ -1,4 +1,5 @@
 import { featureManager } from '@/feature';
+import { createTooltip } from '@/utils/floating';
 import { getI18nForLang } from '@/utils/utils';
 
 import i18n from './_i18n.json';
@@ -30,14 +31,7 @@ export const buildSettingsPanel = (panel: HTMLElement, onClose: () => void) => {
     btn.textContent = `${label}`;
     btn.dataset.tab = id;
 
-    // TODO global tooltip util
-    if (description) {
-      const tooltip = createElement('div', 'mk-settings-tab-tooltip');
-      tooltip.textContent = description;
-
-      btn.title = description;
-      btn.append(tooltip);
-    }
+    createTooltip(btn, description, {});
 
     if (index === 0) {
       moduleContentEl.classList.add('active');
