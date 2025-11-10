@@ -5,6 +5,8 @@ import path from 'path';
 import postcss from 'postcss';
 import { defineConfig } from 'vite';
 
+const MINIFY = process.env.MINIFY === 'true';
+
 const userScriptHeader = `// ==UserScript==
 // @name         一些 TronClass 功能
 // @namespace    https://github.com/a3510377/ulearn-script
@@ -127,18 +129,21 @@ export default defineConfig({
     },
   },
   build: {
-    minify: false,
-    // minify: 'terser',
-    // terserOptions: {
-    //   mangle: true,
-    //   compress: {
-    //     drop_console: false,
-    //     dead_code: false,
-    //     keep_fnames: false,
-    //     keep_classnames: false,
-    //   },
-    //   format: { comments: false },
-    // },
+    ...(MINIFY
+      ? {
+          minify: 'terser',
+          terserOptions: {
+            mangle: true,
+            compress: {
+              drop_console: false,
+              dead_code: false,
+              keep_fnames: false,
+              keep_classnames: false,
+            },
+            format: { comments: false },
+          },
+        }
+      : { minify: false }),
     lib: {
       entry: 'src/main.ts',
       name: 'ULearn',

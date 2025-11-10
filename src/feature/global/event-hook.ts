@@ -65,7 +65,7 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
           } catch {}
         };
         load();
-        win.addEventListener('DOMContentLoaded', load);
+        window.addEventListener('DOMContentLoaded', load);
 
         return ({ custom }) => {
           try {

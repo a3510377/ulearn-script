@@ -200,18 +200,3 @@ export const waitForJQuery = (timeout = 5000) => {
 export const waitForAngular = (timeout = 5000) => {
   return waitForLibrary('angular', timeout);
 };
-
-export const addHref = async (
-  querySelector: string,
-  href: string,
-  className: string | string[]
-) => {
-  const el = await waitForElement(querySelector).catch(() => null);
-  if (el) {
-    const hrefEl = createElement('a', 'mk-custom-link', className);
-    hrefEl.setAttribute('ng-href', href);
-
-    el.parentNode?.insertBefore(hrefEl, el);
-    hrefEl.append(el);
-  }
-};
