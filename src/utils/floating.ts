@@ -2,6 +2,8 @@ import { createElement, createStyle } from './dom';
 
 export type FloatingType = 'tooltip' | 'popover' | 'dropdown' | 'menu';
 
+// TODO use 1 element pool to reduce DOM creation
+
 export interface FloatingOptions {
   offset?: number;
   content?: string | HTMLElement;
@@ -324,6 +326,7 @@ const createPanel = (
   return el;
 };
 
+// TODO add more options like delay, interactive, etc.
 export const createTooltip = (
   trigger: HTMLElement,
   content: string | HTMLElement,

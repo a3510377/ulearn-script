@@ -1,6 +1,10 @@
 import type { Feature, FeatureModule } from '@/feature';
 import { createElement } from '@/utils/dom';
+import { createTooltip } from '@/utils/floating';
 import type { BaseStateType } from '@/utils/state';
+import { getI18nForLang } from '@/utils/utils';
+
+import i18n from './_i18n.json';
 
 export const buildContentUI = <T extends BaseStateType>(
   id: string,
@@ -34,15 +38,29 @@ export const buildContentUI = <T extends BaseStateType>(
         descEl.textContent = desc ?? '';
       }
 
+      const labelEl = createElement('label', 'mk-settings-feature-label');
+      const labelText = createElement('h3');
+      labelText.textContent = feature.name;
+
+      const wrapper = createElement('div', 'mk-settings-feature-base-wrapper');
+      wrapper.append(labelText);
+
+      if (feature.options.liveReload === false) {
+        const liveReloadTag = createElement('span', 'mk-livereload-tag');
+        liveReloadTag.textContent = '⚠️';
+        createTooltip(
+          liveReloadTag,
+          getI18nForLang(i18n).needLiveReloadTooltip
+        );
+
+        labelText.append(liveReloadTag);
+      }
+
       if (
         'toggle' in feature.options ||
         'enable' in feature.options ||
         'disable' in feature.options
       ) {
-        const labelEl = createElement('label', 'mk-settings-feature-label');
-        const labelText = createElement('h3');
-        labelText.textContent = feature.name;
-
         const inputEl = createElement('input', 'mk-settings-feature-input');
         inputEl.name = feature.options.id;
         inputEl.type = 'checkbox';
@@ -51,26 +69,21 @@ export const buildContentUI = <T extends BaseStateType>(
 
         feature.on((_, newValue) => (inputEl.checked = !!newValue));
 
-        const wrapper = createElement(
-          'div',
-          'mk-settings-feature-base-wrapper'
-        );
-
-        wrapper.append(labelText, inputEl);
-        labelEl.append(wrapper);
-        descEl && labelEl.append(descEl);
-
-        featureBox.append(labelEl);
+        wrapper.append(inputEl);
       }
 
-      if ('click' in feature.options) {
-        const btn = createElement('button', 'mk-button');
-        btn.textContent = feature.name;
-        btn.addEventListener('click', () => feature.click());
-        featureBox.append(btn);
+      labelEl.append(wrapper);
+      featureBox.append(labelEl);
+      descEl && labelEl.append(descEl);
 
-        descEl && featureBox.append(descEl);
-      }
+      // if ('click' in feature.options) {
+      //   const btn = createElement('button', 'mk-button');
+      //   btn.textContent = feature.name;
+      //   btn.addEventListener('click', () => feature.click());
+      //   featureBox.append(btn);
+
+      //   descEl && featureBox.append(descEl);
+      // }
 
       list.append(featureBox);
     }

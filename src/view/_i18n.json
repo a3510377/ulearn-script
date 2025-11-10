@@ -8,7 +8,8 @@
     "settings": {
       "title": "設定面板",
       "searchPlaceholder": "搜尋設定..."
-    }
+    },
+    "needLiveReloadTooltip": "該功能需要重新載入頁面以生效"
   },
   "zh-CN": {}
 }

@@ -27,12 +27,11 @@ export const deepMerge = <
 
 export const getI18nForLang = <T extends Record<string, any>>(
   obj: T
-): Partial<T[typeof DEFAULT_LANGUAGE_CODE]> => {
+): T[typeof DEFAULT_LANGUAGE_CODE] => {
   const userLang = obj[USER_LANGUAGE_CODE];
   const defaultLang = obj[DEFAULT_LANGUAGE_CODE];
 
   if (!userLang) return defaultLang;
-  if (!defaultLang) return {};
 
   return deepMerge(defaultLang, userLang);
 };

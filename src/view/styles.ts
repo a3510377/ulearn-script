@@ -240,6 +240,12 @@ export const setupSettingsMenuStyle = () => {
       font-weight: 900;
     }
 
+    .mk-settings-feature-base-wrapper h3 .mk-livereload-tag {
+      cursor: help;
+      font-size: 0.9rem;
+      margin-left: 0.5rem;
+    }
+
     .mk-settings-feature-base-wrapper .mk-settings-feature-description {
       font-weight: normal;
     }
