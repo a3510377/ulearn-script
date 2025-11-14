@@ -11,6 +11,12 @@ declare interface Window {
   angular: angular.IAngularStatic | undefined;
   $: JQueryStatic | undefined;
   jQuery: JQueryStatic | undefined;
+
+  // TronClass variables
+  statisticsSettings?: {
+    showIdleWarning?: boolean;
+    enableIdleWarning?: boolean;
+  };
 }
 
 // declare global {

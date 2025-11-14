@@ -1,4 +1,5 @@
 import { createElement, createStyle } from './dom';
+import { bound } from './hook/utils';
 
 export type FloatingType = 'tooltip' | 'popover' | 'dropdown' | 'menu';
 
@@ -242,7 +243,7 @@ export class FloatingUI {
 
   private onScroll = () => {
     cancelAnimationFrame(this.rafId);
-    this.rafId = requestAnimationFrame(() => {
+    this.rafId = bound.requestAnimationFrame(() => {
       if (this.panel.classList.contains('show')) this.updatePosition();
     });
   };

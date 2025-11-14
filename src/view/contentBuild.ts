@@ -35,7 +35,7 @@ export const buildContentUI = <T extends BaseStateType>(
       let descEl: HTMLHeadingElement | undefined;
       if (desc) {
         descEl = createElement('h4', 'mk-settings-feature-description');
-        descEl.textContent = desc ?? '';
+        descEl.textContent = desc;
       }
 
       const labelEl = createElement('label', 'mk-settings-feature-label');

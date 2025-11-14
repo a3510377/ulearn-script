@@ -1,6 +1,7 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 import { createStyle, waitForJQuery } from '@/utils/dom';
-import { disableDevToolDetector, win } from '@/utils/hook/dev-tool';
+import { disableDevToolDetector } from '@/utils/hook/dev-tool';
+import { win } from '@/utils/hook/utils';
 
 import type { GlobalFeatures } from '.';
 
@@ -54,15 +55,12 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
             .then(($) => $('#idle-warning-popup').foundation('reveal', 'close'))
             .catch();
 
-          try {
-            custom.originalEnableIdleWarning ??=
-              // @ts-ignore
-              win.statisticsSettings.enableIdleWarning;
-            // @ts-ignore
-            win.statisticsSettings.enableIdleWarning = false;
-            // @ts-ignore
+          custom.originalEnableIdleWarning ??=
+            win.statisticsSettings?.enableIdleWarning;
+          if (win.statisticsSettings) {
             win.statisticsSettings.showIdleWarning = false;
-          } catch {}
+            win.statisticsSettings.enableIdleWarning = false;
+          }
         };
         load();
         window.addEventListener('DOMContentLoaded', load);
@@ -70,9 +68,11 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
         return ({ custom }) => {
           try {
             if (custom.originalEnableIdleWarning !== null) {
-              // @ts-ignore
-              win.statisticsSettings.enableIdleWarning =
-                custom.originalEnableIdleWarning;
+              if (win.statisticsSettings) {
+                // @ts-ignore
+                win.statisticsSettings.enableIdleWarning =
+                  custom.originalEnableIdleWarning;
+              }
             }
           } catch {}
 

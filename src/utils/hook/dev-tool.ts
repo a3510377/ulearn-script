@@ -1,7 +1,5 @@
 import { bound, hook, win } from './utils';
 
-export * from './utils';
-
 declare const Function: Function;
 
 export interface DisableDevToolDetectorCustomOptions {

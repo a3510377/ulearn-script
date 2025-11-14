@@ -1,6 +1,6 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 
-import { win } from './hook/dev-tool';
+import { win } from './hook/utils';
 
 export const parseClass = (
   ...classNames: (string | string[] | undefined)[]
@@ -36,7 +36,7 @@ export const waitForElement = <T extends Element = HTMLElement>(
 
     let observer: MutationObserver | null = null;
     const timeoutId = setTimeout(() => {
-      if (observer) observer.disconnect();
+      observer?.disconnect();
       reject(
         new Error(
           `waitForElement: '${selector}' not found within ${timeoutMs}ms`
@@ -53,15 +53,12 @@ export const waitForElement = <T extends Element = HTMLElement>(
       }
     });
 
-    const startObservingDOM = () => {
+    const start = () => {
       observer.observe(document.body, { childList: true, subtree: true });
     };
 
-    if (!document.body) {
-      window.addEventListener('DOMContentLoaded', startObservingDOM, {
-        once: true,
-      });
-    } else startObservingDOM();
+    if (document.body) start();
+    else window.addEventListener('DOMContentLoaded', start, { once: true });
   });
 };
 
@@ -130,9 +127,8 @@ export const onClickOutside = (
 };
 
 export const watchRemove = (el: Element, callback: (el: Element) => void) => {
-  if (!el || !el.parentNode) return;
+  if (!el.parentNode) return;
 
-  let parent = el.parentNode;
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const removedNode of mutation.removedNodes) {
@@ -152,7 +148,7 @@ export const watchRemove = (el: Element, callback: (el: Element) => void) => {
 
   const cleanup = () => observer.disconnect();
 
-  observer.observe(parent, { childList: true, subtree: true });
+  observer.observe(el.parentNode, { childList: true, subtree: true });
 
   const interval = setInterval(() => {
     if (!document.body.contains(el)) {
@@ -174,6 +170,7 @@ export const waitForLibrary = <K extends keyof Window>(
 ): Promise<NonNullable<Window[K]>> => {
   const interval = 50;
   const maxTries = timeout / interval;
+
   let tries = 0;
   return new Promise((resolve, reject) => {
     const timer = setInterval(() => {

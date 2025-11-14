@@ -9,6 +9,7 @@ export const native = Object.freeze({
   performance: win.performance,
   setTimeout: win.setTimeout,
   Proxy: win.Proxy,
+  requestAnimationFrame: win.requestAnimationFrame,
 });
 
 /**
@@ -33,6 +34,7 @@ export const bound = Object.freeze({
   performance: native.performance,
   setTimeout: native.setTimeout.bind(win),
   Proxy: native.Proxy,
+  requestAnimationFrame: native.requestAnimationFrame.bind(win),
 });
 
 /**
