@@ -157,9 +157,9 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
 
   async click(): Promise<void> {
     try {
-      const oldValue = this.get();
+      const value = this.get();
       if ('click' in this.options) {
-        this.addCleanup(await this.safeCall(this.options.click));
+        this.addCleanup(await this.safeCall(this.options.click, !!value));
         return;
       }
 
@@ -168,7 +168,7 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
         'enable' in this.options ||
         'disable' in this.options
       ) {
-        await this.applyOption('click', !oldValue);
+        await this.applyOption('click', !value);
       }
     } catch (e) {
       console.error(`[Feature:click] ${this.options.id}`, e);
@@ -220,11 +220,12 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
     newValue?: boolean
   ): Promise<void> {
     if (!(await this.check())) return;
-    if (type === 'init' && 'setup' in this.options) {
-      this.addCleanup(await this.safeCall(this.options.setup));
-    }
 
     const oldValue = this.get();
+    if (type === 'init' && 'setup' in this.options) {
+      this.addCleanup(await this.safeCall(this.options.setup, !!oldValue));
+    }
+
     if (newValue === undefined) {
       if (type === 'init') newValue = !!oldValue;
       else return;
@@ -237,9 +238,9 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
       if ('toggle' in this.options) {
         this.addCleanup(await this.safeCall(this.options.toggle, !newValue));
       } else if (newValue && 'enable' in this.options) {
-        this.addCleanup(await this.safeCall(this.options.enable));
+        this.addCleanup(await this.safeCall(this.options.enable, true));
       } else if (!newValue && 'disable' in this.options) {
-        this.addCleanup(await this.safeCall(this.options.disable));
+        this.addCleanup(await this.safeCall(this.options.disable, false));
       }
       this.set(newValue as any);
     } catch (e) {
@@ -309,7 +310,11 @@ export type CleanupResult<T extends BaseStateType> =
 export type CallbackWithCleanupFn<
   T extends BaseStateType,
   P extends any[] = []
-> = (ctx: FeatureContext<T>, ...args: P) => MaybePromise<CleanupResult<T>>;
+> = (
+  ctx: FeatureContext<T>,
+  enabled: boolean,
+  ...args: P
+) => MaybePromise<CleanupResult<T>>;
 
 export type FeatureObject<
   T extends BaseStateType,
@@ -322,7 +327,7 @@ export type FeatureObject<
 } & (
   | { setup: CallbackWithCleanupFn<T> } // setup only
   // toggle only
-  | { toggle: CallbackWithCleanupFn<T, [enabled: boolean]> }
+  | { toggle: CallbackWithCleanupFn<T> }
   // toggle with enable/disable
   | { enable: CallbackWithCleanupFn<T>; disable?: CallbackWithCleanupFn<T> }
   // button

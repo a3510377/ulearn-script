@@ -47,7 +47,7 @@ export const initSettingsMenu = () => {
         }
       }
     })
-    .catch();
+    .catch(() => {});
 
   const updateMenuPanelPosition = () => {
     const fabRect = fabButtonEl.getBoundingClientRect();

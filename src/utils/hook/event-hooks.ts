@@ -1,88 +1,122 @@
 import { bound, hook, win } from './utils';
 
-export type CustomAddEventHandle = (
+export type PreHookCheckFn = (
   this: EventTarget,
+  target: EventTarget
+) => boolean | void;
+export type PreCallCheckFn = (
+  this: EventTarget,
+  ev: Event,
+  target: EventTarget
+) => boolean | void;
+
+interface EventHook {
+  type: string;
+  preHookCheck?: PreHookCheckFn;
+  preCallCheck?: PreCallCheckFn;
+  enabled: boolean;
+}
+
+export interface HookController {
+  enable: () => void;
+  disable: () => void;
+  isEnabled: () => boolean;
+}
+
+const eventHookRegistry = new Map<string, EventHook>();
+const listenerWrapperMap = new WeakMap<
+  EventListenerOrEventListenerObject,
+  EventListener
+>();
+
+export const registerEventHook = (
   type: string,
-  listener: EventListenerOrEventListenerObject | null,
-  options?: boolean | AddEventListenerOptions
-) => boolean;
+  preHookCheck?: PreHookCheckFn,
+  preCallCheck?: PreCallCheckFn
+): HookController => {
+  if (eventHookRegistry.has(type)) {
+    const hookItem = eventHookRegistry.get(type)!;
+    return {
+      enable: () => (hookItem.enabled = true),
+      disable: () => (hookItem.enabled = false),
+      isEnabled: () => hookItem.enabled,
+    };
+  }
 
-// 紀錄所有自訂事件攔截器
-export const customAddEventHandles: Record<string, CustomAddEventHandle[]> = {};
+  const hookItem: EventHook = {
+    type,
+    preHookCheck,
+    preCallCheck,
+    enabled: true,
+  };
+  eventHookRegistry.set(type, hookItem);
 
-let _setup = false;
+  return {
+    enable: () => (hookItem.enabled = true),
+    disable: () => (hookItem.enabled = false),
+    isEnabled: () => hookItem.enabled,
+  };
+};
 
-// 安裝 add/remove 的 hook（僅一次）
-export const setupCustomAddEvent = () => {
-  if (_setup) return;
-  _setup = true;
-
-  const unhooks: (() => void)[] = [];
-
-  // 攔截 addEventListener
-  unhooks.push(
-    hook(
-      EventTarget.prototype,
-      'addEventListener',
-      function (
-        original,
-        type: string,
-        listener: EventListenerOrEventListenerObject | null,
-        options?: boolean | AddEventListenerOptions
-      ) {
-        try {
-          if (
-            customAddEventHandles[type]?.some((fn) => {
-              try {
-                return fn.call(this, type, listener, options) === true;
-              } catch {
-                return false;
-              }
-            })
-          ) {
-            return;
-          }
-        } catch {}
-
+export const overrideEventListener = () => {
+  hook(
+    EventTarget.prototype,
+    'addEventListener',
+    function (original, type, listener, options) {
+      if (!listener) {
         return bound.Reflect.apply(original, this, [type, listener, options]);
       }
-    )
-  );
 
-  // 攔截 removeEventListener （行為不變）
-  unhooks.push(
-    hook(
-      EventTarget.prototype,
-      'removeEventListener',
-      function (original, type, listener, options) {
+      const hookItem = eventHookRegistry.get(type);
+      if (!hookItem || hookItem.preHookCheck?.call(this, this) === true) {
         return bound.Reflect.apply(original, this, [type, listener, options]);
       }
-    )
+
+      const realListener =
+        typeof listener === 'function'
+          ? listener
+          : listener.handleEvent?.bind(listener);
+      const wrappedListener = function (this: EventTarget, ev: Event) {
+        if (
+          hookItem.enabled &&
+          (hookItem.preCallCheck === undefined ||
+            hookItem.preCallCheck?.call(this, ev, this) === true)
+        ) {
+          return;
+        }
+        realListener.call(this, ev);
+      };
+
+      listenerWrapperMap.set(listener, wrappedListener);
+      return bound.Reflect.apply(original, this, [
+        type,
+        wrappedListener,
+        options,
+      ]);
+    }
   );
 
-  // 暫存 unhook 以便未來還原
-  const SYM = Symbol.for('__event_add_remove_unhooks__');
-  (EventTarget.prototype as any)[SYM] = unhooks;
+  hook(
+    EventTarget.prototype,
+    'removeEventListener',
+    function (original, type, listener, options) {
+      if (!listener) {
+        return bound.Reflect.apply(original, this, [type, listener, options]);
+      }
+
+      const wrapped = listenerWrapperMap.get(listener) || listener;
+      return bound.Reflect.apply(original, this, [type, wrapped, options]);
+    }
+  );
 };
 
-// 加入某事件類型的自訂 hook
-export const addEventHook = (event: string, fn: CustomAddEventHandle) => {
-  (customAddEventHandles[event] ||= []).push(fn);
-};
-
-// 移除 hook
-export const removeEventHook = (event: string, fn: CustomAddEventHandle) => {
-  const list = customAddEventHandles[event];
-  if (!list) return;
-
-  const i = list.indexOf(fn);
-  if (i !== -1) list.splice(i, 1);
-};
-
-// 封鎖 onXXX handler
-export const defineBlockedHandler = (target: any, ev: string) => {
-  const prop = `on${ev}`;
+export const blockPropertyEventAssignment = (
+  target: any,
+  eventName: string
+) => {
+  const prop = `on${eventName}`;
   if (!(prop in target)) return;
+
   const desc = Object.getOwnPropertyDescriptor(target, prop);
   if (desc?.configurable === false) return;
 
@@ -101,21 +135,55 @@ export const defineBlockedHandler = (target: any, ev: string) => {
 
 export type BlockStrategy = 'propagation' | 'immediate' | 'prevent';
 
-// 封鎖一組事件（可指定策略）
-export const blockEvents = (
+export const disableEvents = (
   events: string[],
   target: EventTarget = win,
-  strategy: BlockStrategy = 'propagation'
+  strategy: BlockStrategy = 'propagation',
+  enabled: boolean = true,
+  options: {
+    preHookCheck?: PreHookCheckFn;
+    preCallCheck?: PreCallCheckFn;
+  } = {}
 ) => {
-  const handler = (e: Event) => {
-    if (strategy === 'propagation') e.stopPropagation();
-    else if (strategy === 'immediate') e.stopImmediatePropagation();
-    else if (strategy === 'prevent') e.preventDefault();
+  const strategyHandlers: Record<BlockStrategy, (e: Event) => void> = {
+    propagation: function (this: EventTarget, e: Event) {
+      if (options.preCallCheck?.call(this, e, this) === true) {
+        e.stopPropagation();
+      }
+    },
+    immediate: function (this: EventTarget, e: Event) {
+      if (options.preCallCheck?.call(this, e, this) === true) {
+        e.stopImmediatePropagation();
+      }
+    },
+    prevent: function (this: EventTarget, e: Event) {
+      if (options.preCallCheck?.call(this, e, this) === true) {
+        e.preventDefault();
+      }
+    },
   };
 
+  const handler = strategyHandlers[strategy];
+  const cleanupHooks: (() => void)[] = [];
+
   for (const ev of events) {
-    defineBlockedHandler(target, ev);
-    target.addEventListener(ev, handler, true);
-    addEventHook(ev, () => true);
+    // blockPropertyEventAssignment(target, ev);
+    const reg = registerEventHook(ev);
+    if (!enabled) reg.disable();
+    cleanupHooks.push(reg.disable);
+
+    if (
+      options.preHookCheck === undefined ||
+      options.preHookCheck.call(target, target) === true
+    ) {
+      target.addEventListener(ev, handler, true);
+    }
   }
+
+  return () => {
+    for (const ev of events) target.removeEventListener(ev, handler, true);
+    cleanupHooks.forEach((cleanup) => cleanup());
+  };
 };
+
+overrideEventListener();

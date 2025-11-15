@@ -150,7 +150,7 @@ export const registerMenuFeature = (group: GlobalFeatures) => {
             }
           `);
         })
-        .catch();
+        .catch(() => {});
     },
   });
 };
