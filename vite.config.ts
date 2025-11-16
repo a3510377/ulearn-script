@@ -1,3 +1,5 @@
+import { LEARNING_PLATFORM_DOMAINS } from './const';
+
 import autoprefixer from 'autoprefixer';
 import { minify as htmlMinify } from 'html-minifier';
 import * as lightningcss from 'lightningcss';
@@ -14,8 +16,9 @@ const userScriptHeader = `// ==UserScript==
 // @description  移除頁腳、修復部份樣式、繞過下載限制、繞過快轉限制、繞過複製限制、繞過畫面切換檢測、繞過全螢幕檢測等等，開發時使用 NFU ULearn，其它學校可能不適用
 // @license      MIT
 // @author       MonkeyCat
-// @match        https://tronclass.com.tw/*
-// @match        https://ulearn.nfu.edu.tw/*
+${LEARNING_PLATFORM_DOMAINS.map(
+  (url) => `// @match        https://${url}/*`
+).join('\n')}
 // @match        https://coreyadam8.github.io/copyguard/
 // @match        https://theajack.github.io/disable-devtool/
 // @match        https://blog.aepkill.com/demos/devtools-detector/
