@@ -62,3 +62,20 @@ export const getI18nForLang = <T extends Record<string, any>>(
 
   return deepMerge(defaultLang, userLang);
 };
+
+export type SkipHookFn<Args extends unknown[], R> = ((...args: Args) => R) & {
+  __skipMKHook?: boolean;
+};
+
+export const isHookSkipped = <Args extends unknown[], R>(
+  func: (...args: Args) => R
+): func is SkipHookFn<Args, R> => {
+  return '__skipMKHook' in func && func.__skipMKHook === true;
+};
+
+export const skipHookFunc = <Args extends unknown[], R>(
+  func: (...args: Args) => R
+): SkipHookFn<Args, R> => {
+  (func as SkipHookFn<Args, R>).__skipMKHook = true;
+  return func;
+};

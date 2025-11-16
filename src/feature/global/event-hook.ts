@@ -1,4 +1,5 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
+import { skipHookFunc } from '@/utils';
 import { createStyle, waitForJQuery } from '@/utils/dom';
 import { disableDevToolDetector } from '@/utils/hook/dev-tool';
 import { createHookGroup } from '@/utils/hook/event-hooks';
@@ -88,7 +89,7 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
           5e3
         );
 
-        const load = () => {
+        const load = skipHookFunc(() => {
           waitForJQuery()
             .then(($) => $('#idle-warning-popup').foundation('reveal', 'close'))
             .catch(() => {});
@@ -99,7 +100,7 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
             win.statisticsSettings.showIdleWarning = false;
             win.statisticsSettings.enableIdleWarning = false;
           }
-        };
+        });
         load();
         window.addEventListener('DOMContentLoaded', load);
 

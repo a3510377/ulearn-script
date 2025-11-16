@@ -1,5 +1,5 @@
 import { featureManager } from '@/feature';
-import { getI18nForLang } from '@/utils';
+import { getI18nForLang, skipHookFunc } from '@/utils';
 
 import i18n from './_i18n.json';
 import { buildContentUI } from './contentBuild';
@@ -45,33 +45,36 @@ export const buildSettingsPanel = (panel: HTMLElement, onClose: () => void) => {
   panel.append(tabs, content);
 
   // Tab switching logic
-  tabs.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest(
-      '.mk-settings-tab'
-    ) as HTMLButtonElement;
-    if (!btn) return;
+  tabs.addEventListener(
+    'click',
+    skipHookFunc((e) => {
+      const btn = (e.target as HTMLElement).closest(
+        '.mk-settings-tab'
+      ) as HTMLButtonElement;
+      if (!btn) return;
 
-    const targetTab = btn.dataset.tab;
+      const targetTab = btn.dataset.tab;
 
-    // Update active tab button
-    tabs
-      .querySelectorAll('.mk-settings-tab.active')
-      .forEach((tab) => tab.classList.remove('active'));
-    btn.classList.add('active');
+      // Update active tab button
+      tabs
+        .querySelectorAll('.mk-settings-tab.active')
+        .forEach((tab) => tab.classList.remove('active'));
+      btn.classList.add('active');
 
-    content
-      .querySelectorAll('.mk-settings-module.active')
-      .forEach((module) => module.classList.remove('active'));
+      content
+        .querySelectorAll('.mk-settings-module.active')
+        .forEach((module) => module.classList.remove('active'));
 
-    content
-      .querySelector(`[data-module="${targetTab}"]`)
-      ?.classList.add('active');
-  });
+      content
+        .querySelector(`[data-module="${targetTab}"]`)
+        ?.classList.add('active');
+    })
+  );
 
   // Close on Escape key
-  const onKeyDown = (ev: KeyboardEvent) => {
+  const onKeyDown = skipHookFunc((ev: KeyboardEvent) => {
     if (ev.key === 'Escape') onClose();
-  };
+  });
   document.addEventListener('keydown', onKeyDown);
 
   return () => {

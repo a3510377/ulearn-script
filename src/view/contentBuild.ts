@@ -1,5 +1,5 @@
 import type { Feature, FeatureModule } from '@/feature';
-import { getI18nForLang } from '@/utils';
+import { getI18nForLang, skipHookFunc } from '@/utils';
 import { createElement } from '@/utils/dom';
 import type { BaseStateType } from '@/utils/state';
 
@@ -24,7 +24,10 @@ export const buildContentUI = <T extends BaseStateType>(
 
     const title = createElement('h2', 'mk-settings-group-title');
     title.textContent = module.getI18N()?.groups?.[groupID] || groupID;
-    title.addEventListener('click', () => title.classList.toggle('collapsed'));
+    title.addEventListener(
+      'click',
+      skipHookFunc(() => title.classList.toggle('collapsed'))
+    );
     groupWrapper.append(title);
 
     const list = createElement('div', 'mk-settings-group-content');
@@ -65,7 +68,10 @@ export const buildContentUI = <T extends BaseStateType>(
         inputEl.name = feature.options.id;
         inputEl.type = 'checkbox';
         inputEl.checked = !!feature.get();
-        inputEl.addEventListener('change', () => feature.click());
+        inputEl.addEventListener(
+          'change',
+          skipHookFunc(() => feature.click())
+        );
 
         feature.on((_, newValue) => (inputEl.checked = !!newValue));
 

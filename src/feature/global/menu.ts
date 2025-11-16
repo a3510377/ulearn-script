@@ -1,5 +1,6 @@
 import { SVG_MENU } from '@/assets/svg';
 import { MK_CUSTOM_COMPONENT, MK_HIDDEN_SCROLL_CLASS } from '@/constants';
+import { skipHookFunc } from '@/utils';
 import {
   createElement,
   createStyle,
@@ -38,20 +39,20 @@ export const registerMenuFeature = (group: GlobalFeatures) => {
             customLayoutClassList.remove('mk-open-menu');
           });
 
-          const resizeHandler = () => {
+          const resizeHandler = skipHookFunc(() => {
             if (window.innerWidth >= 920) {
               bodyClassList.remove(MK_HIDDEN_SCROLL_CLASS);
               customLayoutClassList.remove('mk-open-menu');
             }
-          };
+          });
           window.addEventListener('resize', resizeHandler);
 
-          const clickHandler = () => {
+          const clickHandler = skipHookFunc(() => {
             bodyClassList.toggle(
               MK_HIDDEN_SCROLL_CLASS,
               customLayoutClassList.toggle('mk-open-menu')
             );
-          };
+          });
           customDropMenu.addEventListener('click', clickHandler);
 
           createStyle(`$css

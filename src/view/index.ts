@@ -1,4 +1,5 @@
-﻿import { createElement, onClickOutside } from '@/utils/dom';
+﻿import { skipHookFunc } from '@/utils';
+import { createElement, onClickOutside } from '@/utils/dom';
 import { PersistentState } from '@/utils/state';
 
 import { buildSettingsPanel } from './panel';
@@ -155,25 +156,28 @@ export const initSettingsMenu = () => {
   };
 
   let suppressNextClick = false;
-  fabButtonEl.addEventListener('click', () => {
-    if (suppressNextClick) {
-      suppressNextClick = false;
-      return;
-    }
+  fabButtonEl.addEventListener(
+    'click',
+    skipHookFunc(() => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        return;
+      }
 
-    const isCurrentlyHidden = menuPanelEl.classList.contains('mk-hide');
-    if (isCurrentlyHidden) {
-      // Before showing, update position
-      updateMenuPanelPosition();
+      const isCurrentlyHidden = menuPanelEl.classList.contains('mk-hide');
+      if (isCurrentlyHidden) {
+        // Before showing, update position
+        updateMenuPanelPosition();
 
-      // Small delay to ensure position is set before animation
-      requestAnimationFrame(() => {
-        menuPanelEl.classList.remove('mk-hide');
-      });
-    } else {
-      menuPanelEl.classList.add('mk-hide');
-    }
-  });
+        // Small delay to ensure position is set before animation
+        requestAnimationFrame(() => {
+          menuPanelEl.classList.remove('mk-hide');
+        });
+      } else {
+        menuPanelEl.classList.add('mk-hide');
+      }
+    })
+  );
 
   let rafId = 0;
   let startX = 0;
@@ -192,7 +196,7 @@ export const initSettingsMenu = () => {
     }
   };
 
-  const onPointerDown = (e: PointerEvent) => {
+  const onPointerDown = skipHookFunc((e: PointerEvent) => {
     isPointerDown = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -206,25 +210,25 @@ export const initSettingsMenu = () => {
         suppressNextClick = true;
         setDraggingState(true);
 
-        const updateTransform = () => {
+        const updateTransform = skipHookFunc(() => {
           fabButtonEl.style.transform = `translateY(${
             e.clientY - fabButtonEl.getBoundingClientRect().top
           }px)`;
-        };
+        });
 
         updateTransform();
         fabButtonEl.addEventListener('transitionrun', updateTransform);
         fabButtonEl.addEventListener(
           'transitionend',
-          () => {
+          skipHookFunc(() => {
             fabButtonEl.removeEventListener('transitionrun', updateTransform);
-          },
+          }),
           { once: true }
         );
         fabButtonEl.setPointerCapture(e.pointerId);
       }
     }, DRAG_DELAY);
-  };
+  });
 
   const applyNextPos = () => {
     rafId = 0;
@@ -255,7 +259,7 @@ export const initSettingsMenu = () => {
     fabButtonEl.style.transform = 'translateY(0)';
   };
 
-  const onPointerMove = (e: PointerEvent) => {
+  const onPointerMove = skipHookFunc((e: PointerEvent) => {
     const moved =
       Math.abs(e.clientX - startX) > DRAG_THRESHOLD ||
       Math.abs(e.clientY - startY) > DRAG_THRESHOLD;
@@ -273,7 +277,7 @@ export const initSettingsMenu = () => {
 
       if (!rafId) rafId = requestAnimationFrame(applyNextPos);
     }
-  };
+  });
 
   const snapToEdge = () => {
     const rect = fabButtonEl.getBoundingClientRect();
@@ -301,7 +305,7 @@ export const initSettingsMenu = () => {
     }
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = skipHookFunc(() => {
     isPointerDown = false;
     clearTimeout(timeoutID);
 
@@ -318,7 +322,7 @@ export const initSettingsMenu = () => {
       // If release without dragging, reset transform
       fabButtonEl.style.transform = '';
     }
-  };
+  });
 
   const panelCleanup = buildSettingsPanel(menuPanelEl, () => {
     menuPanelEl.classList.add('mk-hide');

@@ -2,6 +2,8 @@ import { SVG_CLOSE, SVG_INFO, SVG_SUCCESS, SVG_WARN } from '@/assets/svg';
 
 import { createElement, createStyle, createSvgFromString } from '../dom';
 
+import { skipHookFunc } from '..';
+
 export const TOAST_ICONS = {
   warn: SVG_WARN,
   info: SVG_INFO,
@@ -19,12 +21,15 @@ class ToastManager {
     this.viewport.tabIndex = 0;
     document.body.append(this.viewport);
 
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        const last = Array.from(this.activeToasts).pop();
-        if (last) this.close(last, true);
-      }
-    });
+    document.addEventListener(
+      'keydown',
+      skipHookFunc((e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          const last = Array.from(this.activeToasts).pop();
+          if (last) this.close(last, true);
+        }
+      })
+    );
 
     createStyle(`$css
       .mk-toast-viewport {
@@ -100,18 +105,18 @@ class ToastManager {
     let startTime = Date.now();
     let remaining = duration < 0 ? Infinity : duration;
 
-    const startTimer = () => {
+    const startTimer = skipHookFunc(() => {
       if (remaining === Infinity) return;
       timer = window.setTimeout(() => this.close(toastEl), remaining);
       startTime = Date.now();
-    };
+    });
 
-    const pauseTimer = () => {
+    const pauseTimer = skipHookFunc(() => {
       if (timer !== null) {
         clearTimeout(timer);
         remaining -= Date.now() - startTime;
       }
-    };
+    });
 
     if (remaining > 0 && remaining !== Infinity) {
       startTimer();
@@ -123,19 +128,25 @@ class ToastManager {
     let pointerStart: { x: number; y: number } | null = null;
     let deltaX = 0;
 
-    toastEl.addEventListener('pointerdown', (e: PointerEvent) => {
-      pointerStart = { x: e.clientX, y: e.clientY };
-    });
+    toastEl.addEventListener(
+      'pointerdown',
+      skipHookFunc((e: PointerEvent) => {
+        pointerStart = { x: e.clientX, y: e.clientY };
+      })
+    );
 
-    toastEl.addEventListener('pointermove', (e: PointerEvent) => {
-      if (!pointerStart) return;
-      deltaX = e.clientX - pointerStart.x;
-      if (Math.abs(deltaX) > 10) {
-        toastEl.style.transform = `translateX(${deltaX}px)`;
-      }
-    });
+    toastEl.addEventListener(
+      'pointermove',
+      skipHookFunc((e: PointerEvent) => {
+        if (!pointerStart) return;
+        deltaX = e.clientX - pointerStart.x;
+        if (Math.abs(deltaX) > 10) {
+          toastEl.style.transform = `translateX(${deltaX}px)`;
+        }
+      })
+    );
 
-    const tryClose = () => {
+    const tryClose = skipHookFunc(() => {
       if (Math.abs(deltaX) > 80) {
         toastEl.style.setProperty('--direction', deltaX > 0 ? '-1' : '1');
         this.close(toastEl);
@@ -143,7 +154,7 @@ class ToastManager {
 
       deltaX = 0;
       pointerStart = null;
-    };
+    });
 
     toastEl.addEventListener('pointerup', tryClose);
     toastEl.addEventListener('pointercancel', tryClose);
@@ -178,7 +189,10 @@ class ToastManager {
     toastTextEl.textContent = message;
 
     toastEl.append(toastIconEl, toastTextEl, toastCloseIconEl);
-    toastCloseIconEl.addEventListener('click', () => this.close(toastEl));
+    toastCloseIconEl.addEventListener(
+      'click',
+      skipHookFunc(() => this.close(toastEl))
+    );
     return toastEl;
   }
 }

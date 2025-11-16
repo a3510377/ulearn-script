@@ -2,6 +2,8 @@ import { MK_CUSTOM_COMPONENT } from '@/constants';
 
 import { win } from './hook/utils';
 
+import { skipHookFunc } from '.';
+
 export const parseClass = (
   ...classNames: (string | string[] | undefined)[]
 ): string[] => {
@@ -53,9 +55,9 @@ export const waitForElement = <T extends Element = HTMLElement>(
       }
     });
 
-    const start = () => {
+    const start = skipHookFunc(() => {
       observer.observe(document.body, { childList: true, subtree: true });
-    };
+    });
 
     if (document.body) start();
     else window.addEventListener('DOMContentLoaded', start, { once: true });
@@ -110,7 +112,7 @@ export const onClickOutside = (
     });
   };
 
-  const listener = (event: MouseEvent) => {
+  const listener = skipHookFunc((event: MouseEvent) => {
     if (
       event.target &&
       !target.contains(event.target as Node) &&
@@ -118,7 +120,7 @@ export const onClickOutside = (
     ) {
       handler(event);
     }
-  };
+  });
 
   document.addEventListener('click', listener);
 

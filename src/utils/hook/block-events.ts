@@ -1,6 +1,8 @@
 import { blockPropertyEventAssignment, registerEventHook } from './event-hooks';
 import { bound, hook, win } from './utils';
 
+import { skipHookFunc } from '..';
+
 export const combineCleanups = (...cleanups: (() => void)[]) => {
   return () => {
     for (const c of cleanups) {
@@ -65,7 +67,11 @@ export const blockVisibilitySetup = () => {
 
   for (const ev of visibilityEvents) {
     blockPropertyEventAssignment(win, ev);
-    win.addEventListener(ev, (e) => e.stopPropagation(), true);
+    win.addEventListener(
+      ev,
+      skipHookFunc((e) => e.stopPropagation()),
+      true
+    );
     cleanups.push(registerEventHook(ev).disable);
   }
 
@@ -74,7 +80,7 @@ export const blockVisibilitySetup = () => {
 
 // beforeunload, unload, pagehide, pageshow
 export const blockLifecycleSetup = () => {
-  const handler = (e: Event) => e.stopImmediatePropagation();
+  const handler = skipHookFunc((e: Event) => e.stopImmediatePropagation());
   const events = ['beforeunload', 'unload', 'pagehide', 'pageshow'];
 
   for (const ev of events) {

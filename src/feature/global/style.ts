@@ -1,4 +1,5 @@
 import { MK_HIDDEN_SCROLL_CLASS } from '@/constants';
+import { skipHookFunc } from '@/utils';
 
 import type { GlobalFeatures } from '.';
 
@@ -7,7 +8,7 @@ export const registerStyleFeature = (group: GlobalFeatures) => {
     id: 'init-hide-scroll',
     enable: async () => {
       const INIT_HIDE_SCROLL_CLASSNAME = `${MK_HIDDEN_SCROLL_CLASS}-init`;
-      const fixScrollStyleHandle = () => {
+      const fixScrollStyleHandle = skipHookFunc(() => {
         const toggleHideScroll = (hide: boolean) => {
           // > ?. 避免在某些情況下 document.body 為 null 而出錯
           document.body?.classList.toggle(INIT_HIDE_SCROLL_CLASSNAME, hide);
@@ -15,11 +16,13 @@ export const registerStyleFeature = (group: GlobalFeatures) => {
 
         if (document.readyState !== 'complete') {
           toggleHideScroll(true);
-          window.addEventListener('load', () => toggleHideScroll(false), {
-            once: true,
-          });
+          window.addEventListener(
+            'load',
+            skipHookFunc(() => toggleHideScroll(false)),
+            { once: true }
+          );
         }
-      };
+      });
 
       fixScrollStyleHandle();
       document.addEventListener('DOMContentLoaded', fixScrollStyleHandle);

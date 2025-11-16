@@ -1,5 +1,7 @@
 import { bound, hook, win } from './utils';
 
+import { isHookSkipped } from '..';
+
 export type PreHookCheckFn = (
   this: EventTarget,
   target: EventTarget
@@ -60,7 +62,9 @@ export const overrideEventListener = () => {
     EventTarget.prototype,
     'addEventListener',
     function (original, type, listener, options) {
-      if (!listener) {
+      const realListener =
+        typeof listener === 'function' ? listener : listener?.handleEvent;
+      if (!listener || !realListener || isHookSkipped(realListener)) {
         return bound.Reflect.apply(original, this, [type, listener, options]);
       }
 
@@ -72,10 +76,6 @@ export const overrideEventListener = () => {
         return bound.Reflect.apply(original, this, [type, listener, options]);
       }
 
-      const realListener =
-        typeof listener === 'function'
-          ? listener
-          : listener.handleEvent?.bind(listener);
       const wrappedListener = function (this: EventTarget, ev: Event) {
         if (
           hookItem === undefined ||

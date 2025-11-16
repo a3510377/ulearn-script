@@ -1,3 +1,5 @@
+import { skipHookFunc } from '@/utils';
+
 import { createElement, createStyle } from '../utils/dom';
 import { bound } from '../utils/hook/utils';
 
@@ -178,21 +180,24 @@ export class FloatingUI {
     this.ensurePanelStyle();
 
     if (this.type === 'tooltip') {
-      this.trigger.addEventListener('mouseenter', () => this.show());
-      this.trigger.addEventListener('mouseleave', () => this.hide());
-      this.trigger.addEventListener('focus', () => this.show());
-      this.trigger.addEventListener('blur', () => this.hide());
-      this.trigger.addEventListener('touchstart', (e) => this.onTouch(e), {
+      this.trigger.addEventListener('mouseenter', this.show);
+      this.trigger.addEventListener('mouseleave', this.hide);
+      this.trigger.addEventListener('focus', this.show);
+      this.trigger.addEventListener('blur', this.hide);
+      this.trigger.addEventListener('touchstart', this.onTouch, {
         passive: false,
       });
     } else {
-      this.trigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (FloatingUI.active && FloatingUI.active !== this) {
-          FloatingUI.active.hide();
-        }
-        this.toggle();
-      });
+      this.trigger.addEventListener(
+        'click',
+        skipHookFunc((e) => {
+          e.stopPropagation();
+          if (FloatingUI.active && FloatingUI.active !== this) {
+            FloatingUI.active.hide();
+          }
+          this.toggle();
+        })
+      );
     }
   }
 
@@ -241,26 +246,26 @@ export class FloatingUI {
     else this.show();
   }
 
-  private onScroll = () => {
+  private onScroll = skipHookFunc(() => {
     cancelAnimationFrame(this.rafId);
     this.rafId = bound.requestAnimationFrame(() => {
       if (this.panel.classList.contains('show')) this.updatePosition();
     });
-  };
+  });
 
-  private onKeyDown = (e: KeyboardEvent) => {
+  private onKeyDown = skipHookFunc((e: KeyboardEvent) => {
     if (e.key === 'Escape') this.hide();
-  };
+  });
 
-  private onDocClick = (e: Event) => {
+  private onDocClick = skipHookFunc((e: Event) => {
     const t = e.target as Node;
     if (!this.panel.contains(t) && !this.trigger.contains(t)) this.hide();
-  };
+  });
 
-  private onTouch = (e: TouchEvent) => {
+  private onTouch = skipHookFunc((e: TouchEvent) => {
     e.preventDefault();
     this.toggle();
-  };
+  });
 
   updatePosition() {
     const rect = this.trigger.getBoundingClientRect();
