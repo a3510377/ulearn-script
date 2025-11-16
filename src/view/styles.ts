@@ -4,7 +4,7 @@ export const setupSettingsMenuStyle = () => {
   const settingsMenuStyle = createStyle(`$css
     .mk-settings-menu {
       position: relative;
-      z-index: 99999;
+      z-index: 900000;
       font-family: Arial, sans-serif;
       user-select: none;
     }
@@ -71,7 +71,7 @@ export const setupSettingsMenuStyle = () => {
 
   const settingsPanelStyle = createStyle(`$css
     .mk-settings-menu-panel {
-      z-index: 99999;
+      z-index: 900000;
       position: fixed;
       width: 30rem;
       top: 0;

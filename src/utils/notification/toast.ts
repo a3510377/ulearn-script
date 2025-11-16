@@ -34,7 +34,7 @@ class ToastManager {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        z-index: 9999;
+        z-index: 920000;
         outline: none;
       }
 

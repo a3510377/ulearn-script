@@ -14,19 +14,18 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       // 允許用戶選取和複製頁面上的文字
       id: 'copy',
       setup: ({ custom }, enabled) => {
-        const keyFilter = (e: Event) => {
-          if (!(e instanceof KeyboardEvent)) return false;
-          return (
-            (e.ctrlKey || e.metaKey) &&
-            ['c', 'v', 'x'].includes(e.key.toLowerCase())
-          );
-        };
-
         const keyboard = createHookGroup(
           ['keyup', 'keydown', 'keypress'],
           enabled,
-          keyFilter
+          (e: Event) => {
+            if (!(e instanceof KeyboardEvent)) return false;
+            return (
+              (e.ctrlKey || e.metaKey) &&
+              ['c', 'v', 'x'].includes(e.key.toLowerCase())
+            );
+          }
         );
+
         const misc = createHookGroup(
           [
             'contextmenu',
@@ -134,8 +133,26 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
           enabled
         );
 
-        custom.enable = enable;
-        custom.disable = disable;
+        const keyboard = createHookGroup(
+          ['keyup', 'keydown', 'keypress'],
+          enabled,
+          (e) => {
+            if (!(e instanceof KeyboardEvent)) return false;
+            const key = e.key.toLowerCase();
+            if (key === 'f11') return true;
+
+            return false;
+          }
+        );
+
+        custom.enable = () => {
+          enable();
+          keyboard.enable();
+        };
+        custom.disable = () => {
+          disable();
+          keyboard.disable();
+        };
         return disable;
       },
       enable: ({ custom }) => {

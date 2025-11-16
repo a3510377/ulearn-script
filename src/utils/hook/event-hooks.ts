@@ -23,7 +23,7 @@ export interface HookController {
   isEnabled: () => boolean;
 }
 
-const eventHookRegistry = new Map<string, EventHook>();
+const eventHookRegistry = new Map<string, EventHook[]>();
 const listenerWrapperMap = new WeakMap<
   EventListenerOrEventListenerObject,
   EventListener
@@ -34,22 +34,19 @@ export const registerEventHook = (
   preHookCheck?: PreHookCheckFn,
   preCallCheck?: PreCallCheckFn
 ): HookController => {
-  if (eventHookRegistry.has(type)) {
-    const hookItem = eventHookRegistry.get(type)!;
-    return {
-      enable: () => (hookItem.enabled = true),
-      disable: () => (hookItem.enabled = false),
-      isEnabled: () => hookItem.enabled,
-    };
-  }
-
   const hookItem: EventHook = {
     type,
     preHookCheck,
     preCallCheck,
     enabled: true,
   };
-  eventHookRegistry.set(type, hookItem);
+
+  let hooks = eventHookRegistry.get(type);
+  if (!hooks) {
+    hooks = [];
+    eventHookRegistry.set(type, hooks);
+  }
+  hooks.push(hookItem);
 
   return {
     enable: () => (hookItem.enabled = true),
@@ -68,7 +65,10 @@ export const overrideEventListener = () => {
       }
 
       const hookItem = eventHookRegistry.get(type);
-      if (!hookItem || hookItem.preHookCheck?.call(this, this) === true) {
+      if (
+        !hookItem ||
+        hookItem.some((hook) => hook.preHookCheck?.call(this, this) === true)
+      ) {
         return bound.Reflect.apply(original, this, [type, listener, options]);
       }
 
@@ -78,9 +78,11 @@ export const overrideEventListener = () => {
           : listener.handleEvent?.bind(listener);
       const wrappedListener = function (this: EventTarget, ev: Event) {
         if (
-          hookItem.enabled &&
-          (hookItem.preCallCheck === undefined ||
-            hookItem.preCallCheck?.call(this, ev, this) === true)
+          hookItem === undefined ||
+          hookItem.some(
+            (hook) =>
+              hook.enabled && hook.preCallCheck?.call(this, ev, this) === true
+          )
         ) {
           return;
         }

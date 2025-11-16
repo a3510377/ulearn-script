@@ -19,12 +19,12 @@ const ROOT_ELEMENT = (() => {
   createStyle(`$css
     .${FLOATING_ROOT_CLASSNAME} {
       position: relative;
-      z-index: 100000;
+      z-index: 910000;
     }
 
     .${FLOATING_PANEL_CLASSNAME} {
       position: fixed;
-      z-index: 100001;
+      z-index: 910000;
       background: #222;
       color: #fff;
       border-radius: 6px;
