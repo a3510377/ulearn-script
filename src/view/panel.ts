@@ -1,9 +1,9 @@
 import { featureManager } from '@/feature';
-import { createTooltip } from '@/utils/floating';
-import { getI18nForLang } from '@/utils/utils';
+import { getI18nForLang } from '@/utils';
 
 import i18n from './_i18n.json';
 import { buildContentUI } from './contentBuild';
+import { createTooltip } from './floating';
 
 import { createElement } from '#/dom';
 

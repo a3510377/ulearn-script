@@ -1,5 +1,5 @@
-import { createElement, createStyle } from './dom';
-import { bound } from './hook/utils';
+import { createElement, createStyle } from '../utils/dom';
+import { bound } from '../utils/hook/utils';
 
 export type FloatingType = 'tooltip' | 'popover' | 'dropdown' | 'menu';
 

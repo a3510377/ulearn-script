@@ -1,4 +1,4 @@
-import { DEFAULT_LANGUAGE_CODE, type LanguageCode } from '@/utils/global';
+import { DEFAULT_LANGUAGE_CODE, type LanguageCode } from '@/utils';
 import {
   type BaseStateType,
   type ChangeListener,

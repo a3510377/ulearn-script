@@ -1,10 +1,10 @@
 import type { Feature, FeatureModule } from '@/feature';
+import { getI18nForLang } from '@/utils';
 import { createElement } from '@/utils/dom';
-import { createTooltip } from '@/utils/floating';
 import type { BaseStateType } from '@/utils/state';
-import { getI18nForLang } from '@/utils/utils';
 
 import i18n from './_i18n.json';
+import { createTooltip } from './floating';
 
 export const buildContentUI = <T extends BaseStateType>(
   id: string,
