@@ -16,6 +16,9 @@ const userScriptHeader = `// ==UserScript==
 // @author       MonkeyCat
 // @match        https://tronclass.com.tw/*
 // @match        https://ulearn.nfu.edu.tw/*
+// @match        https://coreyadam8.github.io/copyguard/
+// @match        https://theajack.github.io/disable-devtool/
+// @match        https://blog.aepkill.com/demos/devtools-detector/
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_listValues

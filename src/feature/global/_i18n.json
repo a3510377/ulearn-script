@@ -40,6 +40,14 @@
       "idle-check-disable": {
         "name": "抑制長時間不活動導致的彈出提示",
         "description": "防止因長時間不活動而彈出閒置警告提示"
+      },
+      "fullscreen-change-block": {
+        "name": "阻止全螢幕變更事件",
+        "description": "防止頁面進入或退出全螢幕模式時觸發相關事件"
+      },
+      "blur-change-block": {
+        "name": "阻止視窗失焦事件",
+        "description": "防止視窗失去焦點時觸發相關事件"
       }
     }
   }

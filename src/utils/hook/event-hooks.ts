@@ -186,4 +186,24 @@ export const disableEvents = (
   };
 };
 
+export const createHookGroup = (
+  events: string[],
+  enabled: boolean,
+  filter?: (e: Event) => boolean | void
+) => {
+  const hooks: HookController[] = [];
+
+  for (const ev of events) {
+    const reg = registerEventHook(ev, undefined, filter);
+    if (!enabled) reg.disable();
+    hooks.push(reg);
+  }
+
+  return {
+    hooks,
+    enable: () => hooks.forEach((h) => h.enable()),
+    disable: () => hooks.forEach((h) => h.disable()),
+  };
+};
+
 overrideEventListener();

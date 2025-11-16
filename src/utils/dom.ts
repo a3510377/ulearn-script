@@ -97,15 +97,15 @@ export const onClickOutside = (
 ) => {
   if (!target) return () => {};
 
-  const shouldIgnore = ({ target, composedPath }: MouseEvent) => {
-    const path = composedPath();
+  const shouldIgnore = (ev: MouseEvent) => {
+    const path = ev.composedPath();
     return ignore.some((item) => {
       if (typeof item === 'string') {
         return Array.from(document.querySelectorAll(item)).some(
-          (el) => el === target || path.includes(el)
+          (el) => el === ev.target || path.includes(el)
         );
       } else {
-        return item && (item === target || path.includes(item));
+        return item && (item === ev.target || path.includes(item));
       }
     });
   };

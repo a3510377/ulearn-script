@@ -21,6 +21,8 @@ export const defaultConfig = {
     copy: true,
     'disable-devtool-detect': true,
     'idle-check-disable': true,
+    'fullscreen-change-block': true,
+    'blur-change-block': true,
   },
 };
 

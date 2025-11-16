@@ -1,8 +1,4 @@
-import {
-  blockPropertyEventAssignment,
-  type PreHookCheckFn,
-  registerEventHook,
-} from './event-hooks';
+import { blockPropertyEventAssignment, registerEventHook } from './event-hooks';
 import { bound, hook, win } from './utils';
 
 export const combineCleanups = (...cleanups: (() => void)[]) => {
@@ -74,18 +70,6 @@ export const blockVisibilitySetup = () => {
   }
 
   return combineCleanups(...cleanups);
-};
-
-// Blur 事件
-export const blockBlurSetup = () => {
-  const blurHook: PreHookCheckFn = (target) => {
-    return target instanceof Window || target instanceof Document;
-  };
-
-  const { disable: disableBlurHook } = registerEventHook('blur', blurHook);
-  blockPropertyEventAssignment(win, 'blur');
-
-  return () => disableBlurHook();
 };
 
 // beforeunload, unload, pagehide, pageshow

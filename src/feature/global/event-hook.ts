@@ -1,13 +1,10 @@
 import { MK_CUSTOM_COMPONENT } from '@/constants';
 import { createStyle, waitForJQuery } from '@/utils/dom';
 import { disableDevToolDetector } from '@/utils/hook/dev-tool';
-import type { HookController } from '@/utils/hook/event-hooks';
-import { registerEventHook } from '@/utils/hook/event-hooks';
+import { createHookGroup } from '@/utils/hook/event-hooks';
 import { win } from '@/utils/hook/utils';
 
 import type { GlobalFeatures } from '.';
-
-// TODO 添加 copy js hook hot reload support
 
 export const registerEventHookFeature = (group: GlobalFeatures) => {
   group.register(
@@ -17,40 +14,43 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       // 允許用戶選取和複製頁面上的文字
       id: 'copy',
       setup: ({ custom }, enabled) => {
-        const hooks: HookController[] = [];
+        const keyFilter = (e: Event) => {
+          if (!(e instanceof KeyboardEvent)) return false;
+          return (
+            (e.ctrlKey || e.metaKey) &&
+            ['c', 'v', 'x'].includes(e.key.toLowerCase())
+          );
+        };
 
-        ['keyup', 'keydown', 'keypress'].forEach((ev) => {
-          const reg = registerEventHook(ev, undefined, (e) => {
-            if (!(e instanceof KeyboardEvent)) return false;
+        const keyboard = createHookGroup(
+          ['keyup', 'keydown', 'keypress'],
+          enabled,
+          keyFilter
+        );
+        const misc = createHookGroup(
+          [
+            'contextmenu',
+            'copy',
+            'cut',
+            'paste',
+            'drag',
+            'dragstart',
+            'select',
+            'selectstart',
+          ],
+          enabled
+        );
 
-            return (
-              (e.ctrlKey || e.metaKey) &&
-              ['c', 'v', 'x'].includes(e.key.toLowerCase())
-            );
-          });
-          if (!enabled) reg.disable();
-          hooks.push(reg);
-        });
+        custom.enable = () => {
+          keyboard.enable();
+          misc.enable();
+        };
+        custom.disable = () => {
+          keyboard.disable();
+          misc.disable();
+        };
 
-        [
-          'contextmenu',
-          'copy',
-          'cut',
-          'paste',
-          'drag',
-          'dragstart',
-          'select',
-          'selectstart',
-        ].forEach((ev) => {
-          const reg = registerEventHook(ev);
-          if (!enabled) reg.disable();
-          hooks.push(reg);
-        });
-
-        const disable = () => hooks.forEach(({ disable }) => disable());
-        custom.enable = () => hooks.forEach(({ enable }) => enable());
-        custom.disable = disable;
-        return disable;
+        return custom.disable as () => void;
       },
       enable: async ({ custom }) => {
         const style = createStyle(`$css
@@ -120,13 +120,47 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
           clearInterval(intervalID);
         };
       },
+    },
+    {
+      id: 'fullscreen-change-block',
+      setup: ({ custom }, enabled) => {
+        const { enable, disable } = createHookGroup(
+          [
+            'fullscreenchange',
+            'mozfullscreenchange',
+            'webkitfullscreenchange',
+            'MSFullscreenChange',
+          ],
+          enabled
+        );
+
+        custom.enable = enable;
+        custom.disable = disable;
+        return disable;
+      },
+      enable: ({ custom }) => {
+        (custom.enable as () => void)?.();
+        return () => (custom.disable as () => void)?.();
+      },
+    },
+    {
+      id: 'blur-change-block',
+      setup: ({ custom }, enabled) => {
+        const { enable, disable } = createHookGroup(
+          ['blur', 'pagehide'],
+          enabled
+        );
+
+        custom.enable = enable;
+        custom.disable = disable;
+        return disable;
+      },
+      enable: ({ custom }) => {
+        (custom.enable as () => void)?.();
+        return () => {
+          (custom.disable as () => void)?.();
+        };
+      },
     }
   );
 };
-
-// blockVisibilitySetup
-// blockDomLimitSetup
-// blockFocusSetup
-// blockBlurSetup
-// blockLifecycleSetup
-// blockRafSetup

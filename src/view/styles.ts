@@ -243,7 +243,7 @@ export const setupSettingsMenuStyle = () => {
     .mk-settings-feature-base-wrapper h3 .mk-livereload-tag {
       cursor: help;
       font-size: 0.9rem;
-      margin-left: 0.5rem;
+      margin-left: 0.1rem;
     }
 
     .mk-settings-feature-base-wrapper .mk-settings-feature-description {
