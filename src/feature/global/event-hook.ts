@@ -2,7 +2,7 @@ import { MK_CUSTOM_COMPONENT } from '@/constants';
 import { skipHookFunc } from '@/utils';
 import { createStyle, waitForJQuery } from '@/utils/dom';
 import { disableDevToolDetector } from '@/utils/hook/dev-tool';
-import { createHookGroup } from '@/utils/hook/event-hooks';
+import { createEventHookGroup } from '@/utils/hook/event-hooks';
 import { win } from '@/utils/hook/utils';
 
 import type { GlobalFeatures } from '.';
@@ -15,19 +15,21 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       // 允許用戶選取和複製頁面上的文字
       id: 'copy',
       setup: ({ custom }, enabled) => {
-        const keyboard = createHookGroup(
+        const keyboard = createEventHookGroup(
           ['keyup', 'keydown', 'keypress'],
           enabled,
-          (e: Event) => {
-            if (!(e instanceof KeyboardEvent)) return false;
-            return (
-              (e.ctrlKey || e.metaKey) &&
-              ['c', 'v', 'x'].includes(e.key.toLowerCase())
-            );
+          {
+            preCallCheck(e) {
+              if (!(e instanceof KeyboardEvent)) return false;
+              return (
+                (e.ctrlKey || e.metaKey) &&
+                ['c', 'v', 'x'].includes(e.key.toLowerCase())
+              );
+            },
           }
         );
 
-        const misc = createHookGroup(
+        const misc = createEventHookGroup(
           [
             'contextmenu',
             'copy',
@@ -124,7 +126,7 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
     {
       id: 'fullscreen-change-block',
       setup: ({ custom }, enabled) => {
-        const { enable, disable } = createHookGroup(
+        const { enable, disable } = createEventHookGroup(
           [
             'fullscreenchange',
             'mozfullscreenchange',
@@ -134,15 +136,17 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
           enabled
         );
 
-        const keyboard = createHookGroup(
+        const keyboard = createEventHookGroup(
           ['keyup', 'keydown', 'keypress'],
           enabled,
-          (e) => {
-            if (!(e instanceof KeyboardEvent)) return false;
-            const key = e.key.toLowerCase();
-            if (key === 'f11') return true;
+          {
+            preCallCheck(e) {
+              if (!(e instanceof KeyboardEvent)) return false;
+              const key = e.key.toLowerCase();
+              if (key === 'f11') return true;
 
-            return false;
+              return false;
+            },
           }
         );
 
@@ -164,9 +168,19 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
     {
       id: 'blur-change-block',
       setup: ({ custom }, enabled) => {
-        const { enable, disable } = createHookGroup(
-          ['blur', 'pagehide'],
-          enabled
+        // TODO inject document.visibilityState
+        const { enable, disable } = createEventHookGroup(
+          ['blur', 'focus', 'beforeunload', 'unload', 'pagehide', 'pageshow'],
+          enabled,
+          {
+            preHookCheck() {
+              return (
+                this === undefined ||
+                this instanceof Window ||
+                this instanceof Document
+              );
+            },
+          }
         );
 
         custom.enable = enable;

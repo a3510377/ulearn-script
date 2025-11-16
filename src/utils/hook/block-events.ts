@@ -26,8 +26,6 @@ export const blockVisibilitySetup = () => {
     Document.prototype,
     'visibilityState'
   );
-  const origHasFocus = Document.prototype.hasFocus;
-
   Object.defineProperty(Document.prototype, 'hidden', {
     configurable: true,
     get: () => false,
@@ -38,7 +36,7 @@ export const blockVisibilitySetup = () => {
     get: () => 'visible',
   });
 
-  Document.prototype.hasFocus = () => true;
+  cleanups.push(hook(Document.prototype, 'hasFocus', () => true));
 
   cleanups.push(() => {
     if (origHidden) {
@@ -48,8 +46,6 @@ export const blockVisibilitySetup = () => {
     if (origVis) {
       Object.defineProperty(Document.prototype, 'visibilityState', origVis);
     } else delete (Document.prototype as any).visibilityState;
-
-    Document.prototype.hasFocus = origHasFocus;
   });
 
   // Event blocking

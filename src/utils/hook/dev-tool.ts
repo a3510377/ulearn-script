@@ -1,4 +1,4 @@
-import { createHookGroup } from './event-hooks';
+import { createEventHookGroup } from './event-hooks';
 import { bound, hook, win } from './utils';
 
 declare const Function: Function;
@@ -158,27 +158,29 @@ export const disableDevToolDetector = (
   hook(win, 'Function', hookFunctionDebugger);
   hook(Function.prototype, 'constructor', hookFunctionDebugger);
 
-  const keyFilter = (e: Event) => {
-    if (!(e instanceof KeyboardEvent)) return false;
-    const key = e.key.toLowerCase();
-    const isMac = navigator.userAgent.toLowerCase().includes('macintosh');
-
-    if (key === 'f12') return true;
-
-    if (isMac) {
-      if (e.metaKey && key === 's') return true;
-      if (e.metaKey && e.altKey && key === 'u') return true;
-      if (e.metaKey && e.altKey && (key === 'i' || key === 'j')) return true;
-    } else {
-      if (e.ctrlKey && (key === 'u' || key === 's')) return true;
-      if (e.ctrlKey && e.shiftKey && (key === 'i' || key === 'j')) return true;
-    }
-
-    return false;
-  };
-
   // TODO supper hot reload
-  createHookGroup(['keyup', 'keydown', 'keypress'], true, keyFilter);
+  createEventHookGroup(['keyup', 'keydown', 'keypress'], true, {
+    preCallCheck: (e: Event) => {
+      if (!(e instanceof KeyboardEvent)) return false;
+      const key = e.key.toLowerCase();
+      const isMac = navigator.userAgent.toLowerCase().includes('macintosh');
+
+      if (key === 'f12') return true;
+
+      if (isMac) {
+        if (e.metaKey && key === 's') return true;
+        if (e.metaKey && e.altKey && key === 'u') return true;
+        if (e.metaKey && e.altKey && (key === 'i' || key === 'j')) return true;
+      } else {
+        if (e.ctrlKey && (key === 'u' || key === 's')) return true;
+        if (e.ctrlKey && e.shiftKey && (key === 'i' || key === 'j')) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+  });
 
   // const hookTimeFunc = <T extends object>(
   //   obj: T,

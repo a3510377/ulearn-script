@@ -4,6 +4,7 @@ import { isHookSkipped } from '..';
 
 export type PreHookCheckFn = (
   this: EventTarget,
+  type: string,
   target: EventTarget
 ) => boolean | void;
 export type PreCallCheckFn = (
@@ -14,7 +15,15 @@ export type PreCallCheckFn = (
 
 interface EventHook {
   type: string;
+  /**
+   * 當 未設定 或 不返回 false，將注入 hook
+   * 若果多個 Hook 同時存在，則只要有一個 Hook 返回 false 就會允許事件調用
+   */
   preHookCheck?: PreHookCheckFn;
+  /**
+   * 當 未設定 或返回 true ，將阻止使用者的註冊事件被調用
+   * 若果多個 Hook 同時存在，則只要有一個 Hook 返回 true 就會阻止事件調用
+   */
   preCallCheck?: PreCallCheckFn;
   enabled: boolean;
 }
@@ -71,18 +80,19 @@ export const overrideEventListener = () => {
       const hookItem = eventHookRegistry.get(type);
       if (
         !hookItem ||
-        hookItem.some((hook) => hook.preHookCheck?.call(this, this) === true)
+        hookItem.some(
+          (hook) => hook.preHookCheck?.call(this, type, this) === false
+        )
       ) {
         return bound.Reflect.apply(original, this, [type, listener, options]);
       }
 
       const wrappedListener = function (this: EventTarget, ev: Event) {
         if (
-          hookItem === undefined ||
           hookItem.some(
-            (hook) =>
-              hook.enabled && hook.preCallCheck?.call(this, ev, this) === true
-          )
+            (h) => h.enabled && h.preCallCheck?.call(this, ev, this) === true
+          ) ||
+          hookItem.every((h) => !h.enabled || h.preCallCheck === undefined)
         ) {
           return;
         }
@@ -176,7 +186,7 @@ export const disableEvents = (
 
     if (
       options.preHookCheck === undefined ||
-      options.preHookCheck.call(target, target) === true
+      options.preHookCheck.call(target, ev, target) === true
     ) {
       target.addEventListener(ev, handler, true);
     }
@@ -188,15 +198,22 @@ export const disableEvents = (
   };
 };
 
-export const createHookGroup = (
+export const createEventHookGroup = (
   events: string[],
   enabled: boolean,
-  filter?: (e: Event) => boolean | void
+  options: {
+    preHookCheck?: PreHookCheckFn;
+    preCallCheck?: PreCallCheckFn;
+  } = {}
 ) => {
   const hooks: HookController[] = [];
 
   for (const ev of events) {
-    const reg = registerEventHook(ev, undefined, filter);
+    const reg = registerEventHook(
+      ev,
+      options.preHookCheck,
+      options.preCallCheck
+    );
     if (!enabled) reg.disable();
     hooks.push(reg);
   }
