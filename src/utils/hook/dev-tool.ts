@@ -163,7 +163,6 @@ export const disableDevToolDetector = (
     const key = e.key.toLowerCase();
     const isMac = navigator.userAgent.toLowerCase().includes('macintosh');
 
-    console.log(key);
     if (key === 'f12') return true;
 
     if (isMac) {
