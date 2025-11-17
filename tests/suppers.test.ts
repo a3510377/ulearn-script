@@ -26,7 +26,7 @@ const checkDomain = async (domain: string) => {
   }
 };
 
-const IGNORE_DOMAINS: string[] = [
+const IGNORE_DOMAINS: (typeof LEARNING_PLATFORM_DOMAINS)[number][] = [
   'tronclass.com',
   'tronclass.com.tw',
   'tronclass.com.cn',

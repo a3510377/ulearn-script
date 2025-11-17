@@ -124,4 +124,4 @@ export const LEARNING_PLATFORM_DOMAINS = [
   '3tron.nou.edu.tw',
   // 國立勤益科技大學
   'tronclass.ncut.edu.tw',
-];
+] as const;
