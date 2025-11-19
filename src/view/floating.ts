@@ -214,7 +214,11 @@ export class FloatingUI {
     );
   }
 
-  show() {
+  show = skipHookFunc(() => this._show());
+  hide = skipHookFunc(() => this._hide());
+  toggle = skipHookFunc(() => this._toggle());
+
+  private _show() {
     if (FloatingUI.active && FloatingUI.active !== this) {
       FloatingUI.active.hide();
     }
@@ -229,7 +233,7 @@ export class FloatingUI {
     window.addEventListener('resize', this.onScroll, true);
   }
 
-  hide() {
+  private _hide() {
     this.panel.classList.remove('show');
     cancelAnimationFrame(this.rafId);
 
@@ -241,7 +245,7 @@ export class FloatingUI {
     window.removeEventListener('resize', this.onScroll, true);
   }
 
-  toggle() {
+  private _toggle() {
     if (this.panel.classList.contains('show')) this.hide();
     else this.show();
   }

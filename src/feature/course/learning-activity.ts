@@ -66,11 +66,3 @@ export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
     }
   );
 };
-
-// combineCleanups
-// blockVisibilitySetup
-// blockDomLimitSetup
-// blockFocusSetup
-// blockBlurSetup
-// blockLifecycleSetup
-// blockRafSetup

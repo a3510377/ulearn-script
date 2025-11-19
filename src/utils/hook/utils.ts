@@ -65,11 +65,14 @@ export const hook = <
 
   const proxy = new bound.Proxy(original, {
     apply(target, thisArg, args) {
-      return bound.Reflect.apply(interceptor, thisArg, [target, ...args]);
+      const result = bound.Reflect.apply(interceptor, thisArg, [
+        target,
+        ...args,
+      ]);
+      return result;
     },
     construct(target, args, newTarget) {
       return bound.Reflect.construct(target, args, newTarget);
-      // return interceptor.apply(null, [target, ...args]);
     },
     get(target, key, receiver) {
       if (key === 'toString') {
