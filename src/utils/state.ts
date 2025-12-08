@@ -88,14 +88,18 @@ export class BaseState<T extends BaseStateType> {
     return getDeep(this._state, path);
   }
 
-  set<P extends Path<T>>(path: P, value: PartialPathValue<T, P>): this;
+  set<P extends Path<T>>(
+    path: P,
+    value: PartialPathValue<T, P>,
+    options?: { skipEmit?: boolean }
+  ): this;
   set(value: Partial<T>): this;
-  set(pathOrValue: any, value?: any) {
+  set(pathOrValue: any, value?: any, options?: { skipEmit?: boolean }) {
     if (value !== undefined) {
-      this._updateKey(pathOrValue, value);
+      this._updateKey(pathOrValue, value, options);
     } else if (typeof pathOrValue === 'object') {
       for (const k of Object.keys(pathOrValue) as (keyof T)[]) {
-        this._updateKey([k] as Path<T>, pathOrValue[k]!);
+        this._updateKey([k] as Path<T>, pathOrValue[k]!, options);
       }
     } else {
       throw new Error('Invalid arguments for set()');
@@ -105,13 +109,16 @@ export class BaseState<T extends BaseStateType> {
 
   protected _updateKey<P extends Path<T>>(
     path: P,
-    newValue: PartialPathValue<T, P>
+    newValue: PartialPathValue<T, P>,
+    options?: { skipEmit?: boolean }
   ) {
     const oldValue = getDeep(this._state, path);
     if (oldValue !== newValue) {
       setDeep(this._state, path, newValue);
 
-      this._emit(path, newValue, oldValue);
+      if (options?.skipEmit !== true) {
+        this._emit(path, newValue, oldValue);
+      }
     }
   }
 

@@ -147,6 +147,7 @@ export const disableDevToolDetector = (
     }
   });
 
+  // TODO check debugger is removed
   function hookFunctionDebugger(this: any, target: Function, ...args: any[]) {
     const code = args.at(-1) as string;
 
@@ -155,7 +156,7 @@ export const disableDevToolDetector = (
       : bound.Reflect.apply(target, this, args);
   }
 
-  hook(win, 'Function', hookFunctionDebugger);
+  // hook(win, 'Function', hookFunctionDebugger);
   hook(Function.prototype, 'constructor', hookFunctionDebugger);
 
   // TODO supper hot reload

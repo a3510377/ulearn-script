@@ -73,21 +73,12 @@ const overrideXHR = () => {
     return;
   }
 
-  hook(
-    XHR.prototype,
-    'open',
-    function (original, method, url, async?, username?, password?) {
-      (this as any).__xhr_url = url;
+  hook(XHR.prototype, 'open', function (original, ...args) {
+    const [_method, url] = args;
+    (this as any).__xhr_url = url;
 
-      return bound.Reflect.apply(original, this, [
-        method,
-        url,
-        async,
-        username,
-        password,
-      ]);
-    }
-  );
+    return bound.Reflect.apply(original, this, args);
+  });
 
   hook(XHR.prototype, 'send', function (original, body) {
     const xhr = this as XMLHttpRequest & { __xhr_url?: string };

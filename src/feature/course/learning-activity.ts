@@ -1,66 +1,68 @@
-import { waitForAngular, waitForElement } from '@/utils/dom';
+import { registerRequestHook } from '@/utils/hook/request';
+import { useToast } from '@/utils/notification/toast';
 
 import type { CourseFeatureModule } from '.';
-import type { IScope } from 'angular';
 
-// learning-activity
 export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
   group.register(
-    'video',
+    'learning-activity',
     {
       id: 'forceAllowDownload',
-      liveReload: false,
-      enable: async () => {},
+      enable: async () => {
+        const toast = useToast();
+
+        const controller = registerRequestHook(
+          /^\/api\/learning-activity\/(\d+)/,
+          (responseText) => {
+            console.log('hook1', responseText);
+            let changed = false;
+
+            const data = JSON.parse(responseText, (key, value) => {
+              if (key === 'allow_download' && value === false) {
+                changed = true;
+                return true;
+              }
+              return value;
+            });
+
+            if (changed) toast.show('已強制允許下載');
+
+            return JSON.stringify(data);
+          }
+        );
+
+        return () => {
+          controller.disable();
+        };
+      },
     },
     {
       id: 'forceAllowForwardSeeking',
-      test: /\/course\/\d+\/learning-activity/,
       enable: async () => {
-        let warningMessage = '';
-        waitForElement('.audio-wrapper').then(() => {
-          document.querySelectorAll('.audio-wrapper[ng-init]').forEach((el) => {
-            const init = el.getAttribute('ng-init');
-            if (!init) return;
+        const toast = useToast();
 
-            const value = init.match(
-              /forwardSeekingWarning\s*=\s*['"](.*?)['"]/
-            )?.[1];
+        const controller = registerRequestHook(
+          /^\/api\/learning-activity\/(\d+)/,
+          (responseText) => {
+            let changed = false;
+            console.log('hook2', responseText);
 
-            if (!value) return;
+            const data = JSON.parse(responseText, (key, value) => {
+              if (key === 'allow_forward_seeking' && value === false) {
+                changed = true;
+                return true;
+              }
+              return value;
+            });
 
-            el.setAttribute(
-              'ng-init',
-              init
-                .replace(/forwardSeekingWarning\s*=\s*['"].*?['"]\s*;?/g, '')
-                .trim()
-            );
+            if (changed) toast.show('已強制允許快轉');
 
-            if (warningMessage && value && warningMessage !== value) {
-              console.error(
-                'Conflicting forward seeking warning messages:',
-                warningMessage,
-                'and',
-                value
-              );
-            }
-            warningMessage = value;
-          });
-        });
+            return JSON.stringify(data);
+          }
+        );
 
         return () => {
-          waitForAngular().then((angular) => {
-            document
-              .querySelectorAll('.audio-wrapper[ng-init]')
-              .forEach((el) => {
-                const scope = angular
-                  .element(el)
-                  .scope<{ forwardSeekingWarning: string } & IScope>();
-
-                scope?.$apply(() => {
-                  scope.forwardSeekingWarning = warningMessage;
-                });
-              });
-          });
+          controller.disable();
         };
       },
     }

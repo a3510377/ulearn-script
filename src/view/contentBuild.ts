@@ -1,6 +1,7 @@
+import { SVG_EXPERIMENT, SVG_WARN } from '@/assets/svg';
 import type { Feature, FeatureModule } from '@/feature';
 import { getI18nForLang, skipHookFunc } from '@/utils';
-import { createElement } from '@/utils/dom';
+import { createElement, createSvgFromString } from '@/utils/dom';
 import type { BaseStateType } from '@/utils/state';
 
 import i18n from './_i18n.json';
@@ -48,15 +49,26 @@ export const buildContentUI = <T extends BaseStateType>(
       const wrapper = createElement('div', 'mk-settings-feature-base-wrapper');
       wrapper.append(labelText);
 
-      if (feature.options.liveReload === false) {
-        const liveReloadTag = createElement('span', 'mk-livereload-tag');
-        liveReloadTag.textContent = '⚠️';
-        createTooltip(
-          liveReloadTag,
-          getI18nForLang(i18n).needLiveReloadTooltip
-        );
+      const createTag = (svgString: string, tooltipText: string) => {
+        const tag = createElement('div', 'mk-tag');
+        tag.append(createSvgFromString(svgString));
+        createTooltip(tag, tooltipText);
+        return tag;
+      };
 
-        labelText.append(liveReloadTag);
+      if (feature.options.liveReload === false) {
+        labelText.append(
+          createTag(SVG_WARN, getI18nForLang(i18n).needLiveReloadTooltip)
+        );
+      }
+
+      if (feature.options.experimental === true) {
+        labelText.append(
+          createTag(
+            SVG_EXPERIMENT,
+            getI18nForLang(i18n).experimentalFeatureTooltip
+          )
+        );
       }
 
       if (

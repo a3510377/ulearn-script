@@ -237,13 +237,28 @@ export const setupSettingsMenuStyle = () => {
     }
 
     .mk-settings-feature-base-wrapper h3 {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
       font-weight: 900;
     }
 
-    .mk-settings-feature-base-wrapper h3 .mk-livereload-tag {
+    .mk-settings-feature-base-wrapper .mk-tag {
       cursor: help;
-      font-size: 0.9rem;
-      margin-left: 0.1rem;
+      width: 1rem;
+      transition: transform 0.2s;
+    }
+
+    .mk-settings-feature-base-wrapper .mk-tag:hover {
+      transform: scale(1.2);
+    }
+
+    .mk-settings-feature-base-wrapper .mk-tag:nth-child(1) {
+      margin-left: 0.3rem;
+    }
+
+    .mk-settings-feature-base-wrapper .mk-tag svg {
+      fill: #ff3400;
     }
 
     .mk-settings-feature-base-wrapper .mk-settings-feature-description {

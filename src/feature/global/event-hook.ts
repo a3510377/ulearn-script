@@ -73,6 +73,7 @@ export const registerEventHookFeature = (group: GlobalFeatures) => {
       // 防止網站檢測並阻止開發者工具的使用
       id: 'disable-devtool-detect',
       liveReload: false,
+      experimental: true,
       // TODO add clear config option
       enable: () => disableDevToolDetector(),
     },

@@ -231,7 +231,11 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
       else return;
     }
 
-    if (this.options.liveReload === false && type !== 'init') return;
+    if (this.options.liveReload === false && type !== 'init') {
+      this.set(newValue as any);
+
+      return;
+    }
     if (!newValue) await this.dispose();
 
     try {
@@ -324,6 +328,7 @@ export type FeatureObject<
   test?: (() => MaybePromise<boolean>) | RegExp;
   setup?: CallbackWithCleanupFn<T>;
   liveReload?: boolean; // default: true
+  experimental?: boolean; // default: false
 } & (
   | { setup: CallbackWithCleanupFn<T> } // setup only
   // toggle only
