@@ -10,11 +10,11 @@
     "learning-activity": {
       "forceAllowDownload": {
         "name": "強制允許下載學習活動內容",
-        "description": "強制允許用戶下載學習活動中的內容，即使系統預設不允許下載"
+        "description": "強制允許用戶下載學習活動中的內容，即使系統預設不允許下載 [有些活動類型可能不支援此功能]"
       },
       "forceAllowForwardSeeking": {
         "name": "強制允許快轉學習活動內容",
-        "description": "強制允許用戶在學習活動中快轉內容，即使系統預設不允許快轉"
+        "description": "強制允許用戶在學習活動中快轉內容，即使系統預設不允許快轉 [有些活動類型可能不支援此功能]"
       }
     }
   }
