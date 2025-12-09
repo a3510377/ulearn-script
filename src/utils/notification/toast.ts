@@ -91,13 +91,18 @@ class ToastManager {
   }
 
   show(
-    message: string,
+    text: string,
     {
       duration = 5000,
       type = 'success',
-    }: { duration?: number; type?: keyof typeof TOAST_ICONS } = {}
+      description,
+    }: {
+      duration?: number;
+      type?: keyof typeof TOAST_ICONS;
+      description?: string;
+    } = {}
   ) {
-    const toastEl = this.createToastElement(message, type);
+    const toastEl = this.createToastElement({ text, description }, type);
     this.viewport.append(toastEl);
     this.activeToasts.add(toastEl);
 
@@ -177,7 +182,13 @@ class ToastManager {
     }, 250);
   }
 
-  private createToastElement(message: string, type: keyof typeof TOAST_ICONS) {
+  private createToastElement(
+    message: {
+      text: string;
+      description?: string;
+    },
+    type: keyof typeof TOAST_ICONS
+  ) {
     const toastEl = createElement('div', `mk-toast mk-toast-${type}`);
     const toastTextEl = createElement('div', 'mk-toast-text');
     const toastIconEl = createSvgFromString(
@@ -186,7 +197,12 @@ class ToastManager {
     );
     const toastCloseIconEl = createSvgFromString(SVG_CLOSE, 'mk-toast-close');
 
-    toastTextEl.textContent = message;
+    toastTextEl.textContent = message.text;
+    if (message.description) {
+      const toastDescriptionEl = createElement('div', 'mk-toast-description');
+      toastDescriptionEl.textContent = message.description;
+      toastEl.append(toastDescriptionEl);
+    }
 
     toastEl.append(toastIconEl, toastTextEl, toastCloseIconEl);
     toastCloseIconEl.addEventListener(

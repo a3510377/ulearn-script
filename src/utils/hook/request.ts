@@ -39,8 +39,21 @@ export const registerRequestHook = (
 };
 
 const matchUrl = (url: string, matcher: URLMatcher) => {
-  if (typeof matcher === 'string') return url.includes(matcher);
-  if (matcher instanceof RegExp) return matcher.test(url);
+  if (typeof matcher === 'string') return url === matcher;
+  if (matcher instanceof RegExp) {
+    let urlObj: URL;
+
+    if (
+      url.startsWith('http://') ||
+      url.startsWith('https://') ||
+      url.startsWith('//')
+    ) {
+      urlObj = new URL(url);
+      if (urlObj.origin !== win.location.origin) return false;
+    } else urlObj = new URL(url, win.location.origin);
+
+    return matcher.test(urlObj.pathname);
+  }
   if (typeof matcher === 'function') return matcher(url);
   return false;
 };
@@ -80,11 +93,16 @@ const overrideXHR = () => {
     return bound.Reflect.apply(original, this, args);
   });
 
-  hook(XHR.prototype, 'send', function (original, body) {
+  hook(XHR.prototype, 'send', function (original, ...args) {
     const xhr = this as XMLHttpRequest & { __xhr_url?: string };
+
+    let patched = false;
     const patchResponse = (rawText: string) => {
+      if (patched) return;
+
+      patched = true;
       const newText = runRequestHooks(xhr.__xhr_url ?? '', rawText);
-      if (newText === rawText) return false;
+      if (newText === rawText) return;
 
       Object.defineProperty(xhr, 'responseText', {
         configurable: true,
@@ -92,19 +110,24 @@ const overrideXHR = () => {
         get: () => newText,
       });
 
+      let parseCached: any;
+      let hasCached = false;
       Object.defineProperty(xhr, 'response', {
         configurable: true,
         enumerable: true,
         get: () => {
-          try {
-            return JSON.parse(newText);
-          } catch {
-            return newText;
+          if (!hasCached) {
+            try {
+              parseCached = JSON.parse(newText);
+            } catch {
+              parseCached = newText;
+            }
+            hasCached = true;
           }
+
+          return parseCached;
         },
       });
-
-      return true;
     };
 
     const onReady = skipHookFunc(() => {
@@ -124,13 +147,15 @@ const overrideXHR = () => {
     );
     xhr.addEventListener('load', onReady);
 
-    return bound.Reflect.apply(original, this, [body]);
+    return bound.Reflect.apply(original, this, args);
   });
 };
 
 const overrideFetch = () => {
-  hook(window, 'fetch', async function (original, input, init) {
-    const response = await bound.Reflect.apply(original, this, [input, init]);
+  hook(window, 'fetch', async function (original, ...args) {
+    const [input] = args;
+    const response = await bound.Reflect.apply(original, this, args);
+
     try {
       const url =
         typeof input === 'string'

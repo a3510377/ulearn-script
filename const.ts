@@ -1,5 +1,6 @@
 // 以跳過很多自建主頁的學校/組織
 // 測試不穩定或回應較慢的學校/組織也已跳過
+// 若有需要可發 PR 或 issue 補上
 export const LEARNING_PLATFORM_DOMAINS = [
   // Home
   'tronclass.com',
