@@ -87,6 +87,10 @@ class ToastManager {
       .mk-toast-close:hover {
         background: #ffffff26 !important;
       }
+
+      .mk-toast-description {
+        font-size: 1.1rem;
+      }
     `);
   }
 
@@ -201,7 +205,7 @@ class ToastManager {
     if (message.description) {
       const toastDescriptionEl = createElement('div', 'mk-toast-description');
       toastDescriptionEl.textContent = message.description;
-      toastEl.append(toastDescriptionEl);
+      toastTextEl.append(toastDescriptionEl);
     }
 
     toastEl.append(toastIconEl, toastTextEl, toastCloseIconEl);
