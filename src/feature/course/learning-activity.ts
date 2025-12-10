@@ -30,41 +30,39 @@ const createForceAllowHook = (
   successMessage: string,
   failMessage: string
 ) => {
-  return () => {
-    const toast = useToast();
+  const toast = useToast();
 
-    const controller = registerRequestHook(
-      /^\/api\/activities\/(\d+)\/?$/,
-      (responseText: string) => {
-        let activityData: IActivityData;
+  const controller = registerRequestHook(
+    /^\/api\/activities\/(\d+)\/?$/,
+    (responseText: string) => {
+      let activityData: IActivityData;
 
-        try {
-          activityData = JSON.parse(responseText);
-        } catch {
-          toast.show('活動資料格式錯誤，無法強制允許', { type: 'error' });
-          return null;
-        }
-
-        if (activityData.data?.[key] === false) {
-          const checkResult = checkActivitiesBypassSupported(activityData);
-          if (checkResult !== true) {
-            toast.show(failMessage, {
-              type: 'error',
-              description: checkResult,
-            });
-            return responseText;
-          }
-
-          activityData.data[key] = true;
-          toast.show(successMessage, { type: 'success' });
-        }
-
-        return JSON.stringify(activityData);
+      try {
+        activityData = JSON.parse(responseText);
+      } catch {
+        toast.show('活動資料格式錯誤，無法強制允許', { type: 'error' });
+        return null;
       }
-    );
 
-    return () => controller.disable();
-  };
+      if (activityData.data?.[key] === false) {
+        const checkResult = checkActivitiesBypassSupported(activityData);
+        if (checkResult !== true) {
+          toast.show(failMessage, {
+            type: 'error',
+            description: checkResult,
+          });
+          return responseText;
+        }
+
+        activityData.data[key] = true;
+        toast.show(successMessage, { type: 'success' });
+      }
+
+      return JSON.stringify(activityData);
+    }
+  );
+
+  return () => controller.disable();
 };
 
 export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
@@ -73,11 +71,13 @@ export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
     {
       id: 'forceAllowDownload',
       test: LEARNING_ACTIVITY,
-      enable: createForceAllowHook(
-        'allow_download',
-        '已強制允許下載',
-        '強制允許下載失敗'
-      ),
+      enable: () => {
+        return createForceAllowHook(
+          'allow_download',
+          '已強制允許下載',
+          '強制允許下載失敗'
+        );
+      },
     },
     {
       id: 'forceAllowForwardSeeking',
@@ -87,7 +87,7 @@ export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
           'allow_forward_seeking',
           '已強制允許快轉',
           '強制允許快轉失敗'
-        )();
+        );
 
         let closeVuePatch = () => {};
         (async () => {
