@@ -1,3 +1,4 @@
+import { waitForElement, waitForVue } from '@/utils/dom';
 import { registerRequestHook } from '@/utils/hook/request';
 import { useToast } from '@/utils/notification/toast';
 
@@ -6,6 +7,9 @@ import type { IActivityData } from './type';
 import type { CourseFeatureModule } from '.';
 
 // pause_when_leaving_window 不再這邊處理，因已 hook 視窗離開事件
+
+const LEARNING_ACTIVITY =
+  /^\/course\/\d+\/learning-activity(\/full-screen)?\/?$/;
 
 const checkActivitiesBypassSupported = (
   activityData: Partial<IActivityData>
@@ -16,11 +20,6 @@ const checkActivitiesBypassSupported = (
     Array.isArray(activityData)
   ) {
     return '活動資料格式錯誤，無法判定是否支援該功能';
-  }
-
-  const type = activityData.type;
-  if (type === 'interaction') {
-    return '互動式活動尚未支援該功能，請催催開發者吧！';
   }
 
   return true;
@@ -37,30 +36,30 @@ const createForceAllowHook = (
     const controller = registerRequestHook(
       /^\/api\/activities\/(\d+)\/?$/,
       (responseText: string) => {
-        let changed = false;
+        let activityData: IActivityData;
 
-        const data = JSON.parse(responseText, (k, v) => {
-          if (k === key && v === false) {
-            changed = true;
-            return true;
-          }
-          return v;
-        });
+        try {
+          activityData = JSON.parse(responseText);
+        } catch {
+          toast.show('活動資料格式錯誤，無法強制允許', { type: 'error' });
+          return null;
+        }
 
-        if (changed) {
-          const checkResult = checkActivitiesBypassSupported(data);
+        if (activityData.data?.[key] === false) {
+          const checkResult = checkActivitiesBypassSupported(activityData);
           if (checkResult !== true) {
             toast.show(failMessage, {
               type: 'error',
               description: checkResult,
             });
-            return null;
-          } else {
-            toast.show(successMessage);
+            return responseText;
           }
+
+          activityData.data[key] = true;
+          toast.show(successMessage, { type: 'success' });
         }
 
-        return JSON.stringify(data);
+        return JSON.stringify(activityData);
       }
     );
 
@@ -73,6 +72,7 @@ export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
     'learning-activity',
     {
       id: 'forceAllowDownload',
+      test: LEARNING_ACTIVITY,
       enable: createForceAllowHook(
         'allow_download',
         '已強制允許下載',
@@ -81,11 +81,42 @@ export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
     },
     {
       id: 'forceAllowForwardSeeking',
-      enable: createForceAllowHook(
-        'allow_forward_seeking',
-        '已強制允許快轉',
-        '強制允許快轉失敗'
-      ),
+      test: LEARNING_ACTIVITY,
+      enable: () => {
+        const closeHook = createForceAllowHook(
+          'allow_forward_seeking',
+          '已強制允許快轉',
+          '強制允許快轉失敗'
+        )();
+
+        let closeVuePatch = () => {};
+        (async () => {
+          const videoEl = await waitForElement(
+            '#wg-video-player-interaction-video'
+          ).catch(() => null);
+
+          if (videoEl) {
+            const vueApp = await waitForVue(videoEl, {
+              vnode: true,
+            }).catch(() => null);
+
+            if (!vueApp) return;
+
+            const props = vueApp._vnode.component.props;
+            if (props) {
+              const oldSeekable = props.seekable;
+              props.seekable = true;
+
+              closeVuePatch = () => (props.seekable = oldSeekable);
+            }
+          }
+        })();
+
+        return () => {
+          closeHook();
+          closeVuePatch();
+        };
+      },
     }
   );
 };

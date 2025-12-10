@@ -79,3 +79,37 @@ export const skipHookFunc = <Args extends unknown[], R>(
   (func as SkipHookFn<Args, R>).__skipMKHook = true;
   return func;
 };
+
+export const poll = <T = boolean>(
+  conditionFunc: () => { value: T } | Error | undefined,
+  timeout: number = 5000,
+  interval: number = 50
+): Promise<T> => {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    const maxAttempts = Math.floor(timeout / interval);
+
+    const check = () => {
+      const result = conditionFunc();
+      if (result instanceof Error) {
+        reject(result);
+        return;
+      }
+
+      if (result !== undefined) {
+        resolve(result.value);
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        reject(new Error(`poll: timeout exceeded after ${timeout}ms`));
+        return;
+      }
+
+      attempts++;
+      setTimeout(check, interval);
+    };
+
+    check();
+  });
+};

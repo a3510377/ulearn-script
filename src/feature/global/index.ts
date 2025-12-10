@@ -19,7 +19,7 @@ export const defaultConfig = {
   },
   'event-hook': {
     copy: true,
-    'disable-devtool-detect': true,
+    'disable-devtool-detect': false,
     'idle-check-disable': true,
     'fullscreen-change-block': true,
     'blur-change-block': true,

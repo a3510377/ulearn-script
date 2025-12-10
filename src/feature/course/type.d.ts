@@ -3,7 +3,7 @@ export interface IActivityData {
   id: number;
   type: string;
   title: string;
-  type: 'online_video' | 'interaction' | string;
+  type: 'online_video' | 'interaction';
 
   data: {
     ai_generate_contents: boolean;

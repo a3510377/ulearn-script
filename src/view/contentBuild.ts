@@ -35,13 +35,6 @@ export const buildContentUI = <T extends BaseStateType>(
     for (const feature of features) {
       const featureBox = createElement('div', 'mk-settings-feature');
 
-      const desc = feature.description;
-      let descEl: HTMLHeadingElement | undefined;
-      if (desc) {
-        descEl = createElement('h4', 'mk-settings-feature-description');
-        descEl.textContent = desc;
-      }
-
       const labelEl = createElement('label', 'mk-settings-feature-label');
       const labelText = createElement('h3');
       labelText.textContent = feature.name;
@@ -91,8 +84,15 @@ export const buildContentUI = <T extends BaseStateType>(
       }
 
       labelEl.append(wrapper);
+
+      const desc = feature.description;
+      if (desc) {
+        const descEl = createElement('h4', 'mk-settings-feature-description');
+        descEl.textContent = desc;
+        labelEl.append(descEl);
+      }
+
       featureBox.append(labelEl);
-      descEl && labelEl.append(descEl);
 
       // if ('click' in feature.options) {
       //   const btn = createElement('button', 'mk-button');

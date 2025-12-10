@@ -2,16 +2,17 @@ import { MK_CUSTOM_COMPONENT } from '@/constants';
 
 import { win } from './hook/utils';
 
-import { skipHookFunc } from '.';
+import { poll, skipHookFunc } from '.';
 
 export const parseClass = (
   ...classNames: (string | string[] | undefined)[]
 ): string[] => {
-  return classNames.flatMap((className) =>
-    Array.isArray(className)
-      ? className
-      : className?.trim().split(/\s+/).filter(Boolean) || []
-  );
+  return classNames.flatMap((className) => {
+    if (typeof className === 'string') {
+      return className.trim().split(/\s+/).filter(Boolean);
+    }
+    return className || [];
+  });
 };
 
 export const createElement = <K extends keyof HTMLElementTagNameMap>(
@@ -36,12 +37,21 @@ export const waitForElement = <T extends Element = HTMLElement>(
       return;
     }
 
+    const cleanup = (
+      observer: MutationObserver | null,
+      timeoutId: ReturnType<typeof setTimeout>
+    ) => {
+      observer?.disconnect();
+      clearTimeout(timeoutId);
+    };
+
     let observer: MutationObserver | null = null;
     const timeoutId = setTimeout(() => {
-      observer?.disconnect();
+      cleanup(observer, timeoutId);
       reject(
-        new Error(
-          `waitForElement: '${selector}' not found within ${timeoutMs}ms`
+        new DOMException(
+          `waitForElement: '${selector}' not found within ${timeoutMs}ms`,
+          'TimeoutError'
         )
       );
     }, timeoutMs);
@@ -49,19 +59,35 @@ export const waitForElement = <T extends Element = HTMLElement>(
     observer = new MutationObserver(() => {
       const el = query();
       if (el) {
-        clearTimeout(timeoutId);
-        observer?.disconnect();
+        cleanup(observer, timeoutId);
         resolve(el);
       }
     });
 
-    const start = skipHookFunc(() => {
+    const startObserve = skipHookFunc(() => {
       observer.observe(document.body, { childList: true, subtree: true });
     });
 
-    if (document.body) start();
-    else window.addEventListener('DOMContentLoaded', start, { once: true });
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', startObserve, { once: true });
+    } else {
+      startObserve();
+    }
   });
+};
+
+export const waitForVue = <T extends Element = HTMLElement>(
+  element: T,
+  { timeout = 5000, vnode = false }: { timeout?: number; vnode?: boolean }
+): Promise<VueElement<T>> => {
+  const vueEl = element as VueElement<T>;
+
+  return poll(() => {
+    const vueApp = vueEl.__vue_app__;
+    if (vueApp && (!vnode || vueEl._vnode)) {
+      return { value: vueEl };
+    }
+  }, timeout);
 };
 
 export const createStyle = (
@@ -134,7 +160,7 @@ export const watchRemove = (el: Element, callback: (el: Element) => void) => {
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const removedNode of mutation.removedNodes) {
-        if (removedNode === el || (removedNode.contains?.(el) ?? false)) {
+        if (removedNode === el || removedNode.contains?.(el)) {
           cleanup();
           callback(el);
           return;
@@ -152,6 +178,7 @@ export const watchRemove = (el: Element, callback: (el: Element) => void) => {
 
   observer.observe(el.parentNode, { childList: true, subtree: true });
 
+  // TODO Check need this ?
   const interval = setInterval(() => {
     if (!document.body.contains(el)) {
       clearInterval(interval);
@@ -170,25 +197,19 @@ export const waitForLibrary = <K extends keyof Window>(
   globalVar: K,
   timeout = 5000
 ): Promise<NonNullable<Window[K]>> => {
-  const interval = 50;
-  const maxTries = timeout / interval;
+  return poll<NonNullable<Window[K]>>(() => {
+    const lib = win[globalVar];
 
-  let tries = 0;
-  return new Promise((resolve, reject) => {
-    const timer = setInterval(() => {
-      tries++;
-      if (
-        win[globalVar] &&
-        (typeof win[globalVar] === 'object' ||
-          typeof win[globalVar] === 'function')
-      ) {
-        clearInterval(timer);
-        resolve(win[globalVar]);
-      } else if (tries >= maxTries) {
-        clearInterval(timer);
-        reject(new Error(`${globalVar} not found within timeout`));
-      }
-    }, interval);
+    if (
+      lib !== null &&
+      (typeof lib === 'object' || typeof lib === 'function')
+    ) {
+      return { value: lib };
+    }
+  }, timeout).catch((err) => {
+    throw new Error(
+      `waitForLibrary: '${globalVar}' not found within ${timeout}ms: ${err.message}`
+    );
   });
 };
 
@@ -198,4 +219,13 @@ export const waitForJQuery = (timeout = 5000) => {
 
 export const waitForAngular = (timeout = 5000) => {
   return waitForLibrary('angular', timeout);
+};
+
+export type VueElement<T extends Element = HTMLElement> = T & {
+  __vue_app__: {};
+  _vnode: {
+    component: {
+      props: Record<string, any>;
+    };
+  };
 };
