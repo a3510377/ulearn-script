@@ -1,4 +1,9 @@
-import { DEFAULT_LANGUAGE_CODE, type LanguageCode } from '@/utils';
+import {
+  DEFAULT_LANGUAGE_CODE,
+  type LanguageCode,
+  skipHookFunc,
+} from '@/utils';
+import { win } from '@/utils/hook/utils';
 import {
   type BaseStateType,
   type ChangeListener,
@@ -12,6 +17,14 @@ import type { MaybePromise } from '@/utils/type';
 import { registerCourseModule } from './course';
 import { registerExamModule } from './exam';
 import { registerGlobalModule } from './global';
+import type {
+  CleanupFn,
+  CleanupResult,
+  FeatureContext,
+  FeatureModuleI18N,
+  FeatureModuleMessageFull,
+  FeatureObject,
+} from './type';
 
 export class FeatureModule<
   T extends BaseStateType,
@@ -77,6 +90,7 @@ export class FeatureModule<
 
 export class FeatureManager {
   protected modules: Map<string, FeatureModule<any>>;
+  protected removeRouteListeners: (() => void) | null = null;
 
   constructor() {
     this.modules = new Map();
@@ -102,6 +116,63 @@ export class FeatureManager {
         console.error(`[FeatureManager:init] ${module.id}`, e);
       }
     }
+
+    this.setupRouteWatcher();
+  }
+
+  protected setupRouteWatcher(): void {
+    this.removeRouteListeners?.();
+
+    const realHandlerLogic = () => {
+      console.log(
+        '[FeatureManager] Route change detected. Re-evaluating features...'
+      );
+      for (const module of this.modules.values()) {
+        for (const groupFeatures of Object.values(module.groups)) {
+          if (!groupFeatures) continue;
+          for (const feature of groupFeatures) {
+            if (feature.options.routeAware) {
+              feature.reEvaluate();
+            }
+          }
+        }
+      }
+    };
+
+    let lastRunTime = 0;
+    let routeChangeTimer: number | null = null;
+    const handler = skipHookFunc(() => {
+      if (routeChangeTimer) {
+        clearTimeout(routeChangeTimer);
+      }
+
+      const now = Date.now();
+      // Throttling: if last run time is more than 1 second ago, run immediately
+      if (lastRunTime > 0 && now - lastRunTime > 1_000) {
+        console.warn(
+          '[FeatureManager] Route change detected (throttled). Re-evaluating features...'
+        );
+        lastRunTime = now;
+        realHandlerLogic();
+        return;
+      }
+
+      routeChangeTimer = window.setTimeout(() => {
+        lastRunTime = Date.now();
+        realHandlerLogic();
+        routeChangeTimer = null;
+      }, 100);
+    });
+
+    window.addEventListener('popstate', handler);
+    window.addEventListener('hashchange', handler);
+
+    this.removeRouteListeners = () => {
+      window.removeEventListener('popstate', handler);
+      window.removeEventListener('hashchange', handler);
+
+      if (routeChangeTimer) clearTimeout(routeChangeTimer);
+    };
   }
 }
 
@@ -111,6 +182,7 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
   protected readonly module: FeatureModule<T>;
   protected readonly customData: Record<string, unknown> = {};
   protected readonly cleanups: CleanupFn<T>[] = [];
+  protected readonly setupCleanups: CleanupFn<T>[] = [];
 
   constructor(module: FeatureModule<T>, options: FeatureObject<T>, paths: P) {
     this.module = module;
@@ -195,15 +267,45 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
     this.module.set(this.paths, value);
   }
 
-  async dispose(): Promise<void> {
-    for (const fn of this.cleanups) {
+  async dispose(skipSetupCleanup: boolean = false): Promise<void> {
+    const cleanupsToRun = skipSetupCleanup
+      ? this.cleanups
+      : [...this.cleanups, ...this.setupCleanups];
+
+    for (const fn of cleanupsToRun) {
       try {
         await fn.call(this, this.ctx);
       } catch (e) {
         console.error(`[Feature:dispose] ${this.options.id}`, e);
       }
     }
+
     this.cleanups.length = 0;
+    if (!skipSetupCleanup) this.setupCleanups.length = 0;
+  }
+
+  async reEvaluate(): Promise<void> {
+    await this.applyOption('routeChange', !!this.get());
+  }
+
+  protected async checkRouteAware(): Promise<boolean> {
+    const routeAwareValue = this.options.routeAware;
+    if (typeof routeAwareValue === 'function') {
+      try {
+        const { pathname, search: query, hash } = win.location;
+        const res = await routeAwareValue(this.ctx, !!this.get(), {
+          pathname,
+          query,
+          hash,
+        });
+
+        return typeof res === 'boolean' ? res : false; // default: false
+      } catch (e) {
+        console.error(`[Feature:checkRouteAware] ${this.options.id}`, e);
+        return false;
+      }
+    }
+    return routeAwareValue === true;
   }
 
   protected getMessage<K extends keyof FeatureModuleMessageFull<T>>(
@@ -216,14 +318,28 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
   }
 
   protected async applyOption(
-    type: 'init' | 'click',
+    type: 'init' | 'click' | 'routeChange',
     newValue?: boolean
   ): Promise<void> {
-    if (!(await this.check())) return;
+    const isRouteChange = type === 'routeChange';
+    if (!(await this.check())) {
+      if (isRouteChange && this.cleanups.length > 0) {
+        await this.dispose();
+      }
+      return;
+    }
+
+    const isRouteAware = await this.checkRouteAware();
+    if (isRouteChange && !isRouteAware) {
+      return;
+    }
 
     const oldValue = this.get();
     if (type === 'init' && 'setup' in this.options) {
-      this.addCleanup(await this.safeCall(this.options.setup, !!oldValue));
+      this.addCleanup(
+        await this.safeCall(this.options.setup, !!oldValue),
+        true
+      );
     }
 
     if (newValue === undefined) {
@@ -231,13 +347,19 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
       else return;
     }
 
+    // If the feature is not liveReload and it's not init, only update config
     if (this.options.liveReload === false && type !== 'init') {
       this.set(newValue as any);
-
       return;
     }
-    if (!newValue) await this.dispose();
 
+    // If route change and value not changed, do nothing
+    if (isRouteChange || (oldValue && newValue !== oldValue)) {
+      // If route change, skip setup cleanup
+      await this.dispose(isRouteChange);
+    }
+
+    // Apply the option
     try {
       if ('toggle' in this.options) {
         this.addCleanup(await this.safeCall(this.options.toggle, !newValue));
@@ -246,6 +368,7 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
       } else if (!newValue && 'disable' in this.options) {
         this.addCleanup(await this.safeCall(this.options.disable, false));
       }
+
       this.set(newValue as any);
     } catch (e) {
       console.error(`[Feature:applyOption] ${this.options.id}`, e);
@@ -267,77 +390,21 @@ export class Feature<T extends BaseStateType, P extends string[] = string[]> {
     }
   }
 
-  protected addCleanup(result: CleanupResult<T> | void): void {
+  protected addCleanup(
+    result: CleanupResult<T> | void,
+    isSetupCleanup: boolean = false
+  ): void {
     if (!result) return;
     const fns = Array.isArray(result) ? result : [result];
-    this.cleanups.push(...fns.filter(Boolean));
+    if (isSetupCleanup) {
+      this.setupCleanups.push(...fns.filter(Boolean));
+    } else {
+      this.cleanups.push(...fns.filter(Boolean));
+    }
   }
 }
 
 export const featureManager = new FeatureManager();
-
-export type FeatureContext<T extends BaseStateType> = {
-  custom: Record<string, unknown>;
-  module: FeatureModule<T>;
-  paths: string[];
-};
-
-export type BaseStateToString<T> = {
-  [K in keyof T]: T[K] extends Record<PropertyKey, any>
-    ? BaseStateToString<T[K]>
-    : { name: string; description?: string } | string;
-};
-
-export type FeatureModuleMessageFull<T extends BaseStateType> = {
-  module: { name: string; description?: string };
-  groups?: { [K in keyof T]?: string };
-} & BaseStateToString<T>;
-
-export type FeatureModuleI18N<T extends BaseStateType> = {
-  // Default language is required
-  [K in typeof DEFAULT_LANGUAGE_CODE]: FeatureModuleMessageFull<T>;
-} & {
-  // Other languages are optional
-  [K in Exclude<
-    LanguageCode,
-    typeof DEFAULT_LANGUAGE_CODE
-  >]?: FeatureModuleMessageFull<T>;
-};
-
-export type CleanupFn<T extends BaseStateType> = (
-  ctx: FeatureContext<T>
-) => MaybePromise<any>;
-export type CleanupResult<T extends BaseStateType> =
-  | CleanupFn<T>
-  | CleanupFn<T>[]
-  | void;
-export type CallbackWithCleanupFn<
-  T extends BaseStateType,
-  P extends any[] = []
-> = (
-  ctx: FeatureContext<T>,
-  enabled: boolean,
-  ...args: P
-) => MaybePromise<CleanupResult<T>>;
-
-export type FeatureObject<
-  T extends BaseStateType,
-  K extends string = keyof T & string
-> = {
-  id: K;
-  test?: (() => MaybePromise<boolean>) | RegExp;
-  setup?: CallbackWithCleanupFn<T>;
-  liveReload?: boolean; // default: true
-  experimental?: boolean; // default: false
-} & (
-  | { setup: CallbackWithCleanupFn<T> } // setup only
-  // toggle only
-  | { toggle: CallbackWithCleanupFn<T> }
-  // toggle with enable/disable
-  | { enable: CallbackWithCleanupFn<T>; disable?: CallbackWithCleanupFn<T> }
-  // button
-  | { click?: (ctx: FeatureContext<T>) => MaybePromise<void> }
-);
 
 registerCourseModule(featureManager);
 registerExamModule(featureManager);

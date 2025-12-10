@@ -82,6 +82,7 @@ export const registerLearningActivityFeature = (group: CourseFeatureModule) => {
     {
       id: 'forceAllowForwardSeeking',
       test: LEARNING_ACTIVITY,
+      routeAware: true,
       enable: () => {
         const closeHook = createForceAllowHook(
           'allow_forward_seeking',
